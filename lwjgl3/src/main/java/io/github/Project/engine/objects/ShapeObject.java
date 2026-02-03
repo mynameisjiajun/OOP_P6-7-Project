@@ -1,0 +1,81 @@
+package io.github.Project.engine.objects;
+
+import com.badlogic.gdx.graphics.Color;
+import io.github.Project.engine.interfaces.IMovementStrategy;
+
+/**
+ * Abstract base class for shape-based objects.
+ * Provides common functionality for shapes with color and movement.
+ */
+public abstract class ShapeObject {
+    protected Color color;
+    protected IMovementStrategy strategy;
+    protected float x;
+    protected float y;
+    protected float speed;
+    
+    /**
+     * Creates a new shape object.
+     * @param x X position
+     * @param y Y position
+     * @param color Shape color
+     */
+    protected ShapeObject(float x, float y, Color color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.speed = 0;
+    }
+    
+    // Getters and setters
+    public Color getColor() {
+        return color;
+    }
+    
+    public void setColor(Color color) {
+        this.color = color;
+    }
+    
+    public IMovementStrategy getStrategy() {
+        return strategy;
+    }
+    
+    public void setStrategy(IMovementStrategy strategy) {
+        this.strategy = strategy;
+    }
+    
+    public float getX() {
+        return x;
+    }
+    
+    public void setX(float x) {
+        this.x = x;
+    }
+    
+    public float getY() {
+        return y;
+    }
+    
+    public void setY(float y) {
+        this.y = y;
+    }
+    
+    public float getSpeed() {
+        return speed;
+    }
+    
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+    
+    /**
+     * Renders the shape.
+     */
+    public abstract void render();
+    
+    /**
+     * Updates the shape's state.
+     * @param deltaTime Time elapsed since last update
+     */
+    public abstract void update(float deltaTime);
+}

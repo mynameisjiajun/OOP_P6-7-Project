@@ -1,4 +1,4 @@
-package com.team.project.engine.components;
+package io.github.Project.engine.components;
 
 /**
  * Component that holds position and rotation data.

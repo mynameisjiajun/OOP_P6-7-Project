@@ -1,4 +1,4 @@
-package com.team.project.engine.interfaces;
+package io.github.Project.engine.interfaces;
 
 /**
  * Interface for movement strategies.

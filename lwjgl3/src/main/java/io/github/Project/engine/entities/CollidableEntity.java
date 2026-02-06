@@ -1,4 +1,4 @@
-package com.team.project.engine.entities;
+package io.github.Project.engine.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 

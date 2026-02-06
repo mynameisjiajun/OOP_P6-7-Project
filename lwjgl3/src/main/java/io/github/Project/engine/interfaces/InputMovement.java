@@ -1,49 +1,74 @@
 package io.github.Project.engine.interfaces;
 
-/**
- * Interface for input movement handling.
- * Defines methods for processing user input.
- */
-public interface InputMovement {
-    /**
-     * Checks if a key is currently pressed.
-     * @param keyCode The key code to check
-     * @return true if the key is pressed, false otherwise
-     */
-    boolean keyDown(int keyCode);
+import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.InputAdapter;
+
+public class InputMovement extends InputAdapter {
     
+    // Boolean flags to track direction state
+    public boolean keyUp;
+    public boolean keyDown;
+    public boolean keyLeft;
+    public boolean keyRight;
+
     /**
-     * Checks if the screen/button is being touched.
-     * @param screenX Screen X coordinate
-     * @param screenY Screen Y coordinate
-     * @param pointer Pointer for the event
-     * @param button Button index
-     * @return true if touched, false otherwise
+     * Called when a key is pressed down.
      */
-    boolean touchDown(int screenX, int screenY, int pointer, int button);
+    @Override
+    public boolean keyDown(int keycode) {
+        switch (keycode) {
+            // Support both WASD and Arrow Keys
+            case Keys.W:
+            case Keys.UP:
+                keyUp = true;
+                break;
+            case Keys.A:
+            case Keys.LEFT:
+            	keyLeft = true;
+                break;
+            case Keys.S:
+            case Keys.DOWN:
+            	keyDown = true;
+                break;
+            case Keys.D:
+            case Keys.RIGHT:
+            	keyRight = true;
+                break;
+        }
+        return true; // Signal that we handled the input
+    }
+
+    /**
+     * Called when a key is released.
+     */
+    @Override
+    public boolean keyUp(int keycode) {
+        switch (keycode) {
+            case Keys.W:
+            case Keys.UP:
+            	keyUp = false;
+                break;
+            case Keys.A:
+            case Keys.LEFT:
+            	keyLeft = false;
+                break;
+            case Keys.S:
+            case Keys.DOWN:
+            	keyDown = false;
+                break;
+            case Keys.D:
+            case Keys.RIGHT:
+            	keyRight = false;
+                break;
+        }
+        return true;
+    }
     
-    /**
-     * Checks if the touch has been released.
-     * @param screenX Screen X coordinate
-     * @param screenY Screen Y coordinate
-     * @param pointer Pointer for the event
-     * @param button Button index
-     * @return true if released, false otherwise
-     */
-    boolean touchUp(int screenX, int screenY, int pointer, int button);
-    
-    /**
-     * Checks if a key is currently being pressed.
-     * @param keyCode The key code to check
-     * @return true if key is pressed, false otherwise
-     */
-    boolean keyTyped(char keyCode);
-    
-    /**
-     * Handles the scrolling event.
-     * @param amountX Amount scrolled in X direction
-     * @param amountY Amount scrolled in Y direction
-     * @return true if handled, false otherwise
-     */
-    boolean scrolled(float amountX, float amountY);
+    // Optional: Helper method to reset keys (useful when changing scenes)
+    public void reset() {
+    	keyLeft = false;
+        keyDown = false;
+        keyLeft = false;
+        keyRight = false;
+    }
 }

@@ -1,7 +1,7 @@
-package com.team.project.game.entities;
+package io.github.Project.game.entities;
 
-import com.team.project.engine.entities.Entity;
-import com.team.project.engine.interfaces.IMovementStrategy;
+import io.github.Project.engine.entities.Entity;
+import io.github.Project.engine.interfaces.IMovementStrategy;
 
 /**
  * Player entity - represents the player character.

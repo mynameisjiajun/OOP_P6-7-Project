@@ -55,6 +55,6 @@ public abstract class TextureObject {
 	}
 	public abstract void render();
 	
-	public abstract void despose();
+	public abstract void update(float deltaTime);
 	
 }

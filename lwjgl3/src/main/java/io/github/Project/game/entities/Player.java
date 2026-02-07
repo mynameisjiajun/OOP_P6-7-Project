@@ -1,88 +1,81 @@
 package io.github.Project.game.entities;
 
 import io.github.Project.engine.entities.Entity;
+import io.github.Project.engine.interfaces.InputMovement;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 
-/**
- * Player entity - represents the player character.
- * Handles player-specific behavior and rendering.
- */
 public class Player extends Entity {
+
     private String texturePath;
     private float width;
     private float height;
-    private float speed;
-    
+
     /**
-     * Creates a new Player entity.
-     * @param posX Initial X position
-     * @param posY Initial Y position
-     * @param width Player width
-     * @param height Player height
+     * @param input The InputMovement manager (needed for the strategy)
      */
-    public Player(float posX, float posY, float width, float height) {
-        super(posX, posY);
+    public Player(float posX, float posY, float width, float height, InputMovement input) {
+        // 1. Initialize Parent (Entity)
+        super(posX, posY, 100f); // Default speed 100
+        
         this.width = width;
         this.height = height;
-        this.speed = 100f; // Default speed
+
+        // 2. Set the Strategy immediately using the Inner Class
+        this.movementStrategy = new PlayerInputStrategy(input);
     }
-    
-    /**
-     * Sets the player's texture.
-     * @param texturePath Path to the texture file
-     */
-    public void setTexture(String texturePath) {
-        this.texturePath = texturePath;
+
+    // --- The Inner Strategy Class ---
+    // We make it 'private' because no one else needs to know this exists.
+    // We make it 'static' because it doesn't need to access Player's private variables directly;
+    // it works on the 'Entity' passed to the method.
+    private static class PlayerInputStrategy implements IMovementStrategy {
+        
+        private final InputMovement input;
+
+        public PlayerInputStrategy(InputMovement input) {
+            this.input = input;
+        }
+
+        @Override
+        public void updateVelocity(Entity entity) {
+            float dirX = 0;
+            float dirY = 0;
+
+            if (input.keyUp)    dirY = 1;
+            if (input.keyDown)  dirY = -1;
+            if (input.keyLeft)  dirX = -1;
+            if (input.keyRight) dirX = 1;
+
+            // Normalize diagonals
+            if (dirX != 0 && dirY != 0) {
+                dirX *= 0.7071f;
+                dirY *= 0.7071f;
+            }
+
+            float speed = entity.getSpeed();
+            entity.setVx(dirX * speed);
+            entity.setVy(dirY * speed);
+        }
     }
-    
-    /**
-     * Gets the player's texture path.
-     * @return Texture path
-     */
-    public String getTexturePath() {
-        return texturePath;
-    }
-    
-    /**
-     * Sets the player's movement strategy.
-     * @param strategy The movement strategy to use
-     */
-    @Override
-    public void setMovementStrategy(IMovementStrategy strategy) {
-        super.setMovementStrategy(strategy);
-    }
+
+    // --- Player Specific Methods ---
     
     @Override
     public void update(float deltaTime) {
-        // Update player logic
-        // TODO: Handle player input, animations, state changes
-        
+        // Run the strategy logic
         if (movementStrategy != null) {
-            movementStrategy.updateIdleState(vx, vy);
+            movementStrategy.updateVelocity(this);
         }
     }
-    
+
     @Override
-    public void render() {
-        // Render player sprite
-        // TODO: Draw player texture at posX, posY
+    public void render() { 
+        // Render logic 
     }
-    
-    @Override
-    public float getWidth() {
-        return width;
-    }
-    
-    @Override
-    public float getHeight() {
-        return height;
-    }
-    
-    public float getSpeed() {
-        return speed;
-    }
-    
-    public void setSpeed(float speed) {
-        this.speed = speed;
-    }
+
+    // Getters
+    @Override public float getWidth() { return width; }
+    @Override public float getHeight() { return height; }
+    public String getTexturePath() { return texturePath; }
+    public void setTexturePath(String path) { this.texturePath = path; }
 }

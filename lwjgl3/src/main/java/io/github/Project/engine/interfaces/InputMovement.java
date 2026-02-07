@@ -1,8 +1,5 @@
 package io.github.Project.engine.interfaces;
 
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.InputAdapter;
-
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;

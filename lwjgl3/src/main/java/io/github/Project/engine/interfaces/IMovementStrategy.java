@@ -21,8 +21,8 @@ class PlayerMovementStrategy implements IMovementStrategy {
     @Override
     public void updateVelocity(Entity entity) {
         // 1. Reset velocity to 0 (so we stop immediately when keys are released)
-        float targetVx = 0;
-        float targetVy = 0;
+        float directionX = 0;
+        float directionY = 0;
 
         // 2. Determine Direction from Input
         // (Note: We use temporary variables first to handle normalization)
@@ -41,12 +41,11 @@ class PlayerMovementStrategy implements IMovementStrategy {
         }
 
         // 4. Calculate Final Velocity (Direction * Speed)
-        // The strategy now controls the Magnitude of the vector
-        targetVx = dirX * entity.speed;
-        targetVy = dirY * entity.speed;
+     // FIX: Use getSpeed()
+        float currentSpeed = entity.getSpeed(); 
 
-        // 5. Apply to Entity
-        entity.vx = targetVx;
-        entity.vy = targetVy;
+        // FIX: Use setVx() and setVy()
+        entity.setVx(directionX * currentSpeed);
+        entity.setVy(directionY * currentSpeed);
     }
 }

@@ -28,7 +28,6 @@ public class MovementManager implements IMoveable {
             entities.add(entity);
         }
     }
-    //testing
     /**
      * Unregisters an entity from movement management.
      * @param entity The entity to remove

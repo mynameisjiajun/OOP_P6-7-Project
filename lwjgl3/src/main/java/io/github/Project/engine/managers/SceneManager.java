@@ -1,6 +1,7 @@
 package io.github.Project.engine.managers;
 
 import com.badlogic.gdx.Screen;
+import io.github.Project.engine.main.GameMaster;
 import io.github.Project.engine.scenes.Scene;
 
 /**
@@ -9,12 +10,20 @@ import io.github.Project.engine.scenes.Scene;
  */
 public class SceneManager {
     private Scene currentScene;
+    private GameMaster gameMaster;
     
     /**
      * Creates a new SceneManager.
      */
-    public SceneManager() {
+    public SceneManager(GameMaster gameMaster) {
+    	this.gameMaster = gameMaster;
         this.currentScene = null;
+        
+    }
+    
+    public GameMaster getGameMaster() {   
+        return gameMaster;
+   
     }
     
     /**

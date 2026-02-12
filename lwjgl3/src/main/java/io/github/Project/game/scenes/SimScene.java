@@ -26,7 +26,11 @@ public class SimScene extends Scene {
     @Override
     public void show() {
         // Called when scene becomes active
+        sceneManager.getGameMaster()
+                    .getAudioManager()
+                    .startDefaultBackgroundMusic();
     }
+
     
     @Override
     public void update(float deltaTime) {

@@ -12,100 +12,114 @@ import io.github.Project.engine.interfaces.AudioOutput;
  */
 public class AudioManager implements AudioOutput {
 
-	private final ObjectMap<String, Sound> soundCache = new ObjectMap<>();
-	private final ObjectMap<String, Music> musicCache = new ObjectMap<>();
-	private Music currentMusic;
-	private float volume = 1.0f;
-	private boolean muted = false;
+    public static final String MUSIC_BACKGROUND = "music/backgroundmusic.mp3";
+    public static final String SFX_UI_CLICK = "sounds/uiclick.wav";
+    public static final String SFX_COLLISION = "sounds/collisionsound.wav";
 
-	@Override
-	public void playSoundEffect(String soundEffectPath) {
-		if (muted)
-			return;
+    private final ObjectMap<String, Sound> soundCache = new ObjectMap<>();
+    private final ObjectMap<String, Music> musicCache = new ObjectMap<>();
+    private Music currentMusic;
+    private float volume = 1.0f;
+    private boolean muted = false;
 
-		Sound sound = soundCache.get(soundEffectPath);
-		if (sound == null) {
-			sound = Gdx.audio.newSound(Gdx.files.internal(soundEffectPath));
-			soundCache.put(soundEffectPath, sound);
-		}
-		sound.play(volume);
-	}
+    @Override
+    public void playSoundEffect(String soundEffectPath) {
+        if (muted) return;
 
-	/** Loads a music track into cache */
-	public void loadMusic(String name, String filePath) {
-		Music old = musicCache.get(name);
-		if (old != null) {
-			old.stop();
-			old.dispose();
-		}
+        Sound sound = soundCache.get(soundEffectPath);
+        if (sound == null) {
+            sound = Gdx.audio.newSound(Gdx.files.internal(soundEffectPath));
+            soundCache.put(soundEffectPath, sound);
+        }
+        sound.play(volume);
+    }
 
-		Music music = Gdx.audio.newMusic(Gdx.files.internal(filePath));
-		musicCache.put(name, music);
-	}
+    public void loadMusic(String name, String filePath) {
+        Music old = musicCache.get(name);
+        if (old != null) {
+            old.stop();
+            old.dispose();
+        }
 
-	/** Plays a cached music track by name */
-	public void playMusic(String name, boolean loop) {
-		if (currentMusic != null) {
-			currentMusic.stop();
-		}
-		currentMusic = musicCache.get(name);
-		if (currentMusic != null) {
-			currentMusic.setLooping(loop);
-			currentMusic.setVolume(muted ? 0f : volume);
-			currentMusic.play();
-		}
-	}
+        Music music = Gdx.audio.newMusic(Gdx.files.internal(filePath));
+        musicCache.put(name, music);
+    }
 
-	@Override
-	public void setBackgroundMusic(String backgroundMusicPath) {
-		loadMusic("default", backgroundMusicPath);
-		playMusic("default", true);
-	}
+    public void playMusic(String name, boolean loop) {
+        if (currentMusic != null) {
+            currentMusic.stop();
+        }
+        currentMusic = musicCache.get(name);
+        if (currentMusic != null) {
+            currentMusic.setLooping(loop);
+            currentMusic.setVolume(muted ? 0f : volume);
+            currentMusic.play();
+        }
+    }
 
-	@Override
-	public void setVolume(float volume) {
-		this.volume = Math.max(0f, Math.min(1f, volume));
-		if (currentMusic != null && !muted) {
-			currentMusic.setVolume(this.volume);
-		}
-	}
+    @Override
+    public void setBackgroundMusic(String backgroundMusicPath) {
+        loadMusic("default", backgroundMusicPath);
+        playMusic("default", true);
+    }
 
-	@Override
-	public float getVolume() {
-		return volume;
-	}
+    @Override
+    public void setVolume(float volume) {
+        this.volume = Math.max(0f, Math.min(1f, volume));
+        if (currentMusic != null && !muted) {
+            currentMusic.setVolume(this.volume);
+        }
+    }
 
-	@Override
-	public boolean isMuted() {
-		return muted;
-	}
+    @Override
+    public float getVolume() {
+        return volume;
+    }
 
-	@Override
-	public void setMuted(boolean muted) {
-		this.muted = muted;
-		if (currentMusic != null) {
-			currentMusic.setVolume(muted ? 0f : volume);
-		}
-	}
+    @Override
+    public boolean isMuted() {
+        return muted;
+    }
 
-	public void stopMusic() {
-		if (currentMusic != null) {
-			currentMusic.stop();
-		}
-	}
+    @Override
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+        if (currentMusic != null) {
+            currentMusic.setVolume(muted ? 0f : volume);
+        }
+    }
 
-	public void dispose() {
-		stopMusic();
-		currentMusic = null;
+    public void playUIClick() {
+        playSoundEffect(SFX_UI_CLICK);
+    }
 
-		for (Sound s : soundCache.values()) {
-			s.dispose();
-		}
-		soundCache.clear();
+    public void playCollisionSound() {
+        playSoundEffect(SFX_COLLISION);
+    }
 
-		for (Music m : musicCache.values()) {
-			m.dispose();
-		}
-		musicCache.clear();
-	}
+    public void startDefaultBackgroundMusic() {
+        setBackgroundMusic(MUSIC_BACKGROUND);
+    }
+
+    public void stopMusic() {
+        if (currentMusic != null) {
+            currentMusic.stop();
+        }
+    }
+
+    public void dispose() {
+        stopMusic();
+        currentMusic = null;
+
+        for (Sound s : soundCache.values()) {
+            s.dispose();
+        }
+        soundCache.clear();
+
+        for (Music m : musicCache.values()) {
+            m.dispose();
+        }
+        musicCache.clear();
+    }
 }
+

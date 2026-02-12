@@ -17,7 +17,7 @@ public class IOManager implements InputProcessor {
      * Creates a new IOManager.
      */
     public IOManager() {
-        keys = new boolean[256];
+        keys = new boolean[512];
         Gdx.input.setInputProcessor(this);
     }
     

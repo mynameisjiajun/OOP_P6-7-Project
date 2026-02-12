@@ -16,6 +16,8 @@ public class GameMaster {
     private MovementManager movementManager;
     private CollisionManager collisionManager;
     private SceneManager sceneManager;
+    private AudioManager audioManager;
+
     
     /**
      * Creates a new GameMaster instance.
@@ -26,6 +28,7 @@ public class GameMaster {
         this.movementManager = new MovementManager();
         this.collisionManager = new CollisionManager(entityManager);
         this.sceneManager = new SceneManager();
+        this.audioManager = new AudioManager();
     }
     
     /**
@@ -66,5 +69,8 @@ public class GameMaster {
     
     public SceneManager getSceneManager() {
         return sceneManager;
+    }
+    public AudioManager getAudioManager() {
+        return audioManager;
     }
 }

@@ -1,6 +1,7 @@
 package io.github.Project.engine.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 //testabc
 /**
@@ -12,7 +13,10 @@ public abstract class ShapeObject {
     protected IMovementStrategy strategy;
     protected float x;
     protected float y;
+    protected float width;
+    protected float height;
     protected float speed;
+    protected ShapeRenderer shapeRenderer;
     
     /**
      * Creates a new shape object.
@@ -20,11 +24,14 @@ public abstract class ShapeObject {
      * @param y Y position
      * @param color Shape color
      */
-    protected ShapeObject(float x, float y, Color color) {
+    public ShapeObject(float x, float y, float width, float height, float speed, Color color) {
         this.x = x;
         this.y = y;
+        this.width = width;
+        this.height = height;
+        this.speed = speed;
         this.color = color;
-        this.speed = 0;
+  
     }
     
     // Getters and setters
@@ -48,17 +55,28 @@ public abstract class ShapeObject {
         return x;
     }
     
-    public void setX(float x) {
-        this.x = x;
-    }
-    
     public float getY() {
         return y;
     }
     
-    public void setY(float y) {
-        this.y = y;
+    public void setPosition(float x, float y) {
+        this.x = x;
+    	this.y = y;
     }
+    public float getWidth() {
+		return width;
+	}
+    public void setWidth(float width) {
+    	this.width = width;
+    }
+    
+    public float getHeight() {
+    	this.height = height;
+    }
+    
+    public void setHeight(float height) {
+		this.height = height;
+	}
     
     public float getSpeed() {
         return speed;

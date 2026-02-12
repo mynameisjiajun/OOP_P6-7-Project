@@ -2,6 +2,7 @@ package io.github.Project.engine.managers;
 
 import io.github.Project.engine.entities.Entity;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -41,7 +42,7 @@ public class EntityManager {
      * @return List of all entities
      */
     public List<Entity> getEntities() {
-        return new ArrayList<>(entities);
+        return entities;
     }
 
     /**

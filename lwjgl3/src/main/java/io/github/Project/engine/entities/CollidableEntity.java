@@ -3,20 +3,26 @@ package io.github.Project.engine.entities;
 import com.badlogic.gdx.math.Rectangle;
 
 /**
- * An entity that can collide with other CollidableEntities.
- * Has rectangular bounds for collision detection.
+ * A middle-tier class that adds collision boundaries to an Entity.
  */
-public class CollidableEntity extends BaseEntity {
+public abstract class CollidableEntity extends Entity {
+    // physical hitbox of the entity
     protected Rectangle bounds;
 
-    public CollidableEntity(float x, float y, float width, float height) {
-        super(x, y);
-        this.bounds = new Rectangle(x, y, width, height);
+    public CollidableEntity(float posX, float posY, float speed, float width, float height) {
+        super(posX, posY, speed);
+        // Initialize the rectangle at the entity's position
+        this.bounds = new Rectangle(posX, posY, width, height);
+    }
+
+    /**
+     * Updates the hitbox position to follow the entity.
+     */
+    public void updateBounds() {
+        bounds.setPosition(getPosX(), getPosY());
     }
 
     public Rectangle getBounds() {
-        // Update bounds position to match transform
-        bounds.setPosition(transform.x, transform.y);
         return bounds;
     }
 }

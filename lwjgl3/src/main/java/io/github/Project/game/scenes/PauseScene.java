@@ -2,6 +2,7 @@ package io.github.Project.game.scenes;
 
 import io.github.Project.engine.scenes.Scene;
 import io.github.Project.engine.managers.SceneManager;
+import com.badlogic.gdx.Input;
 
 /**
  * Pause menu scene.
@@ -32,7 +33,22 @@ public class PauseScene extends Scene {
     public void update(float deltaTime) {
         // Update pause menu logic
         // TODO: Handle resume, quit, settings buttons
-    }
+    	@Override
+    	public void update(float deltaTime) {
+    	    // Example: Press R to resume
+    		
+    	    if (sceneManager.getGameMaster()
+    	                    .getIOManager()
+    	                    .isKeyPressed(Input.Keys.R)) {
+
+    	        sceneManager.getGameMaster()
+    	                    .getAudioManager()
+    	                    .playUIClick();
+
+    	        sceneManager.setState(new SimScene(sceneManager));
+    	    }
+    	}
+
     
     @Override
     public void render() {

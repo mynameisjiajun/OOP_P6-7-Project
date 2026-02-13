@@ -10,7 +10,6 @@ import io.github.Project.engine.interfaces.IMovementStrategy;
  */
 public abstract class ShapeObject {
     protected Color color;
-    protected IMovementStrategy strategy;
     protected float x;
     protected float y;
     protected float width;
@@ -41,14 +40,6 @@ public abstract class ShapeObject {
     
     public void setColor(Color color) {
         this.color = color;
-    }
-    
-    public IMovementStrategy getStrategy() {
-        return strategy;
-    }
-    
-    public void setStrategy(IMovementStrategy strategy) {
-        this.strategy = strategy;
     }
     
     public float getX() {

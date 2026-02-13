@@ -61,10 +61,9 @@ public class EntityManager {
     public void render() {
         for (Entity entity : entities) {
             entity.render();
-        } 
+        }
     }
-    
-    /**
+     /**
      * Clears all entities.
      */
     public void clear() {

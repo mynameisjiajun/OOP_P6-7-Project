@@ -3,18 +3,15 @@ package io.github.Project.engine.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.interfaces.IMovementStrategy;
-//testabc
+import io.github.Project.engine.entities.Entity;
 /**
  * Abstract base class for shape-based objects.
  * Provides common functionality for shapes with color and movement.
  */
-public abstract class ShapeObject {
+public abstract class ShapeObject extends Entity {
     protected Color color;
-    protected float x;
-    protected float y;
     protected float width;
     protected float height;
-    protected float speed;
     protected ShapeRenderer shapeRenderer;
     
     /**
@@ -24,13 +21,11 @@ public abstract class ShapeObject {
      * @param color Shape color
      */
     public ShapeObject(float x, float y, float width, float height, float speed, Color color) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
+        super(x, y, speed);
+    	this.width = width;
         this.height = height;
-        this.speed = speed;
         this.color = color;
-  
+        this.shapeRenderer = new ShapeRenderer();
     }
     
     // Getters and setters
@@ -42,18 +37,6 @@ public abstract class ShapeObject {
         this.color = color;
     }
     
-    public float getX() {
-        return x;
-    }
-    
-    public float getY() {
-        return y;
-    }
-    
-    public void setPosition(float x, float y) {
-        this.x = x;
-    	this.y = y;
-    }
     public float getWidth() {
 		return width;
 	}
@@ -68,23 +51,4 @@ public abstract class ShapeObject {
     public void setHeight(float height) {
 		this.height = height;
 	}
-    
-    public float getSpeed() {
-        return speed;
-    }
-    
-    public void setSpeed(float speed) {
-        this.speed = speed;
-    }
-    
-    /**
-     * Renders the shape.
-     */
-    public abstract void render();
-    
-    /**
-     * Updates the shape's state.
-     * @param deltaTime Time elapsed since last update
-     */
-    public abstract void update(float deltaTime);
 }

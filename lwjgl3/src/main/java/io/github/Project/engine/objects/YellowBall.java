@@ -16,7 +16,7 @@ public class YellowBall extends TextureObject {
 	
 	public void render () {
 		spriteBatch.begin();
-		spriteBatch.draw(texture, x, y, width, height);
+		spriteBatch.draw(texture, posX, posY, width, height);
 		spriteBatch.end();
 	}
 	public void update(float deltaTime){

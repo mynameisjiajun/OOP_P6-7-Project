@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
  * A middle-tier class that adds collision boundaries to an Entity.
  */
 public abstract class CollidableEntity extends Entity {
-    // physical hitbox of the entity
+    // physical hitbox position of the entity
     protected Rectangle bounds;
 
     public CollidableEntity(float posX, float posY, float speed, float width, float height) {
@@ -16,7 +16,7 @@ public abstract class CollidableEntity extends Entity {
     }
 
     /**
-     * Updates the hitbox position to follow the entity.
+     * Updates the  position to follow the entity.
      */
     public void updateBounds() {
         bounds.setPosition(getPosX(), getPosY());

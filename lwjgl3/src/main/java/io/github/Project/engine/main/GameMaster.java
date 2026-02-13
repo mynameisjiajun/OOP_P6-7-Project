@@ -6,6 +6,7 @@ import io.github.Project.engine.managers.IOManager;
 import io.github.Project.engine.managers.MovementManager;
 import io.github.Project.engine.managers.SceneManager;
 import io.github.Project.engine.managers.AudioManager;
+import io.github.Project.game.scenes.MainMenuScene;
 
 /**
  * GameMaster - Central coordinator for all game systems.
@@ -36,8 +37,8 @@ public class GameMaster extends Game {
         
         this.sceneManager = new SceneManager(this);
         
-        // Initialize with first scene if needed
-        // setScreen(new PlayScene(this));
+        // Initialize with main menu
+        setScreen(new MainMenuScene(this));
     }
     
     /**

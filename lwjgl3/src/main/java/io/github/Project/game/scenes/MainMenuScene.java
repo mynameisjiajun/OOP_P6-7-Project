@@ -18,25 +18,20 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
- * Pause menu scene.
- * Displayed when the game is paused.
+ * Main menu scene - first screen players see.
  */
-public class PauseScene extends Scene {
+public class MainMenuScene extends Scene {
     private Stage stage;
     private Skin skin;
     
-    /**
-     * Creates a new PauseScene.
-     * @param gameMaster Reference to the game master
-     */
-    public PauseScene(GameMaster gameMaster) {
+    public MainMenuScene(GameMaster gameMaster) {
         super(gameMaster);
     }
     
     @Override
     public void show() {
-        // Pause the current music
-        gameMaster.getAudioManager().pauseMusic();
+        // Play background music
+        gameMaster.getAudioManager().startDefaultBackgroundMusic();
         
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -49,19 +44,18 @@ public class PauseScene extends Scene {
         labelStyle.fontColor = Color.WHITE;
         skin.add("default", labelStyle);
         
-        Label titleLabel = new Label("PAUSED", skin);
+        Label titleLabel = new Label("MAIN MENU", skin);
         titleLabel.setFontScale(2);
         
         // Create buttons
-        TextButton resumeButton = new TextButton("Resume", skin);
+        TextButton playButton = new TextButton("Play", skin);
         TextButton optionsButton = new TextButton("Options", skin);
-        TextButton mainMenuButton = new TextButton("Main Menu", skin);
+        TextButton exitButton = new TextButton("Exit", skin);
         
         // Button listeners
-        resumeButton.addListener(new ClickListener() {
+        playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
             }
         });
@@ -73,10 +67,10 @@ public class PauseScene extends Scene {
             }
         });
         
-        mainMenuButton.addListener(new ClickListener() {
+        exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
+                Gdx.app.exit();
             }
         });
         
@@ -86,9 +80,9 @@ public class PauseScene extends Scene {
         table.center();
         
         table.add(titleLabel).padBottom(50).row();
-        table.add(resumeButton).width(200).height(60).padBottom(20).row();
+        table.add(playButton).width(200).height(60).padBottom(20).row();
         table.add(optionsButton).width(200).height(60).padBottom(20).row();
-        table.add(mainMenuButton).width(200).height(60).row();
+        table.add(exitButton).width(200).height(60).row();
         
         stage.addActor(table);
     }
@@ -117,7 +111,7 @@ public class PauseScene extends Scene {
     
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         stage.act(delta);
@@ -130,11 +124,6 @@ public class PauseScene extends Scene {
         if (stage != null) {
             stage.getViewport().update(width, height, true);
         }
-    }
-    
-    @Override
-    public void resume() {
-        gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
     }
     
     @Override

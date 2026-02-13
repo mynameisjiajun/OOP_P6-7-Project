@@ -13,6 +13,8 @@ import io.github.Project.engine.interfaces.AudioOutput;
 public class AudioManager implements AudioOutput {
 
     public static final String MUSIC_BACKGROUND = "music/backgroundmusic.mp3";
+    public static final String MUSIC_GAMEPLAY = "music/gameplay.mp3";
+    public static final String MUSIC_MENU = "music/menu.mp3";
     public static final String SFX_UI_CLICK = "sounds/uiclick.wav";
     public static final String SFX_COLLISION = "sounds/collisionsound.wav";
 
@@ -101,9 +103,29 @@ public class AudioManager implements AudioOutput {
         setBackgroundMusic(MUSIC_BACKGROUND);
     }
 
+    public void startGameplayMusic() {
+        setBackgroundMusic(MUSIC_GAMEPLAY);
+    }
+
+    public void startMenuMusic() {
+        setBackgroundMusic(MUSIC_MENU);
+    }
+
     public void stopMusic() {
         if (currentMusic != null) {
             currentMusic.stop();
+        }
+    }
+
+    public void pauseMusic() {
+        if (currentMusic != null && currentMusic.isPlaying()) {
+            currentMusic.pause();
+        }
+    }
+
+    public void resumeMusic() {
+        if (currentMusic != null && !currentMusic.isPlaying()) {
+            currentMusic.play();
         }
     }
 

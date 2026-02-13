@@ -1,19 +1,99 @@
 package io.github.Project.engine.objects;
 
-import io.github.Project.engine.entities.CollidableEntity;
-
-public abstract class ShapeObject extends CollidableEntity {
-    protected com.badlogic.gdx.graphics.Color color;
-
-    public ShapeObject(float x, float y, float width, float height, float speed, com.badlogic.gdx.graphics.Color color) {
-        // Pass width/height to CollidableEntity to create the hitbox
-        super(x, y, speed, width, height); 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import io.github.Project.engine.interfaces.IMovementStrategy;
+//testabc
+/**
+ * Abstract base class for shape-based objects.
+ * Provides common functionality for shapes with color and movement.
+ */
+public abstract class ShapeObject {
+    protected Color color;
+    protected IMovementStrategy strategy;
+    protected float x;
+    protected float y;
+    protected float width;
+    protected float height;
+    protected float speed;
+    protected ShapeRenderer shapeRenderer;
+    
+    /**
+     * Creates a new shape object.
+     * @param x X position
+     * @param y Y position
+     * @param color Shape color
+     */
+    public ShapeObject(float x, float y, float width, float height, float speed, Color color) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.speed = speed;
+        this.color = color;
+  
+    }
+    
+    // Getters and setters
+    public Color getColor() {
+        return color;
+    }
+    
+    public void setColor(Color color) {
         this.color = color;
     }
     
-    @Override
-    public float getWidth() { return bounds.width; }
+    public IMovementStrategy getStrategy() {
+        return strategy;
+    }
     
-    @Override
-    public float getHeight() { return bounds.height; }
+    public void setStrategy(IMovementStrategy strategy) {
+        this.strategy = strategy;
+    }
+    
+    public float getX() {
+        return x;
+    }
+    
+    public float getY() {
+        return y;
+    }
+    
+    public void setPosition(float x, float y) {
+        this.x = x;
+    	this.y = y;
+    }
+    public float getWidth() {
+		return width;
+	}
+    public void setWidth(float width) {
+    	this.width = width;
+    }
+    
+    public float getHeight(float height) {
+    	return this.height = height;
+    }
+    
+    public void setHeight(float height) {
+		this.height = height;
+	}
+    
+    public float getSpeed() {
+        return speed;
+    }
+    
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+    
+    /**
+     * Renders the shape.
+     */
+    public abstract void render();
+    
+    /**
+     * Updates the shape's state.
+     * @param deltaTime Time elapsed since last update
+     */
+    public abstract void update(float deltaTime);
 }

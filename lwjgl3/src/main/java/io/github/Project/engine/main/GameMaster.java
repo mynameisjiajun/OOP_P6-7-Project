@@ -19,6 +19,9 @@ public class GameMaster extends Game {
     private SceneManager sceneManager;
     private AudioManager audioManager;
 
+    public GameMaster() {
+        // DO NOT load managers here!
+    }
     
     /**
      * Called when the game is created.

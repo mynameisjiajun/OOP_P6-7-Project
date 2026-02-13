@@ -1,6 +1,6 @@
 package io.github.Project.engine.main;
 
-import io.github.Project.engine.managers.CollisionManager;
+import com.badlogic.gdx.Game;
 import io.github.Project.engine.managers.EntityManager;
 import io.github.Project.engine.managers.IOManager;
 import io.github.Project.engine.managers.MovementManager;
@@ -9,21 +9,23 @@ import io.github.Project.engine.managers.AudioManager;
 
 /**
  * GameMaster - Central coordinator for all game systems.
+ * Main entry point that extends LibGDX Game class.
  * Composition pattern: contains all managers and orchestrates them.
  */
-public class GameMaster {
+public class GameMaster extends Game {
     private EntityManager entityManager;
     private IOManager ioManager;
     private MovementManager movementManager;
-    private CollisionManager collisionManager;
     private SceneManager sceneManager;
     private AudioManager audioManager;
 
     
     /**
-     * Creates a new GameMaster instance.
+     * Called when the game is created.
+     * Initializes all managers.
      */
-    public GameMaster() {
+    @Override
+    public void create() {
         this.entityManager = new EntityManager();
         this.ioManager = new IOManager();
         this.movementManager = new MovementManager();
@@ -31,28 +33,38 @@ public class GameMaster {
         
         this.sceneManager = new SceneManager(this);
         
-        this.collisionManager = new CollisionManager(entityManager);
-        
-        
+        // Initialize with first scene if needed
+        // setScreen(new PlayScene(this));
     }
     
     /**
-     * Updates all game systems.
-     * @param deltaTime Time elapsed since last update
+     * Main game loop - called every frame.
+     * LibGDX automatically delegates to the current Screen's render method.
+     * We also update other managers here.
      */
-    public void update(float deltaTime) {
-        sceneManager.update(deltaTime);
+    @Override
+    public void render() {
+        float deltaTime = com.badlogic.gdx.Gdx.graphics.getDeltaTime();
+        
+        // Update game systems
         entityManager.update(deltaTime);
         movementManager.updateMovements(deltaTime);
-        collisionManager.checkCollisions();
+        
+        // LibGDX's Game class automatically calls getScreen().render(delta)
+        super.render();
+        
+        // Render entities after screen
+        entityManager.render();
     }
     
     /**
-     * Renders all game systems.
+     * Called when the game is disposed.
+     * Clean up all resources.
      */
-    public void render() {
-        sceneManager.render();
-        entityManager.render();
+    @Override
+    public void dispose() {
+        super.dispose();
+        audioManager.dispose();
     }
     
     // Getters for all managers
@@ -66,10 +78,6 @@ public class GameMaster {
     
     public MovementManager getMovementManager() {
         return movementManager;
-    }
-    
-    public CollisionManager getCollisionManager() {
-        return collisionManager;
     }
     
     public SceneManager getSceneManager() {

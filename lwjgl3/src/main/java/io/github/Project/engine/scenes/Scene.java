@@ -1,78 +1,83 @@
 package io.github.Project.engine.scenes;
 
-import io.github.Project.engine.managers.SceneManager;
+import com.badlogic.gdx.Screen;
+import io.github.Project.engine.main.GameMaster;
 
 /**
  * Abstract base class for all game scenes/screens.
- * Provides common scene functionality and lifecycle methods.
+ * Implements LibGDX's Screen interface for proper lifecycle management.
  */
-public abstract class Scene {
-    protected SceneManager sceneManager;
+public abstract class Scene implements Screen {
+    protected GameMaster gameMaster;
     protected int width;
     protected int height;
     
     /**
      * Creates a new scene.
-     * @param sceneManager Reference to the scene manager
+     * @param gameMaster Reference to the game master
      */
-    public Scene(SceneManager sceneManager) {
-        this.sceneManager = sceneManager;
+    public Scene(GameMaster gameMaster) {
+        this.gameMaster = gameMaster;
     }
     
     /**
-     * Called when the scene is first created.
+     * Called when this screen becomes the current screen.
+     * Use this to initialize resources.
      */
-    public abstract void create();
-    
-    /**
-     * Called when the scene becomes active.
-     */
+    @Override
     public abstract void show();
     
     /**
-     * Updates the scene.
-     * @param deltaTime Time elapsed since last update
+     * Called when the screen should render itself.
+     * @param delta The time in seconds since the last render.
      */
-    public abstract void update(float deltaTime);
-    
-    /**
-     * Renders the scene.
-     */
-    public abstract void render();
-    
-    /**
-     * Called when the scene is paused.
-     */
-    public abstract void pause();
-    
-    /**
-     * Called when the scene is resumed from pause.
-     */
-    public abstract void resume();
-    
-    /**
-     * Called when the scene is hidden.
-     */
-    public abstract void hide();
-    
-    /**
-     * Called when the scene is being destroyed.
-     */
-    public abstract void dispose();
+    @Override
+    public abstract void render(float delta);
     
     /**
      * Called when the window is resized.
      * @param width New width
      * @param height New height
      */
+    @Override
     public void resize(int width, int height) {
         this.width = width;
         this.height = height;
     }
     
+    /**
+     * Called when the game is paused.
+     */
+    @Override
+    public void pause() {
+        // Override in subclass if needed
+    }
+    
+    /**
+     * Called when the game is resumed from a paused state.
+     */
+    @Override
+    public void resume() {
+        // Override in subclass if needed
+    }
+    
+    /**
+     * Called when this screen is no longer the current screen.
+     */
+    @Override
+    public void hide() {
+        // Override in subclass if needed
+    }
+    
+    /**
+     * Called when this screen should release all resources.
+     */
+    @Override
+    public abstract void dispose();
+    
     // Getters
-    public SceneManager getSceneManager() {
-        return sceneManager;
+    public GameMaster getGameMaster() {
+        return gameMaster;
     }
     
     public int getWidth() {

@@ -1,7 +1,7 @@
 package io.github.Project.game.scenes;
 
 import io.github.Project.engine.scenes.Scene;
-import io.github.Project.engine.managers.SceneManager;
+import io.github.Project.engine.main.GameMaster;
 import com.badlogic.gdx.Input;
 
 /**
@@ -12,64 +12,41 @@ public class PauseScene extends Scene {
     
     /**
      * Creates a new PauseScene.
-     * @param sceneManager Reference to the scene manager
+     * @param gameMaster Reference to the game master
      */
-    public PauseScene(SceneManager sceneManager) {
-        super(sceneManager);
-    }
-    
-    @Override
-    public void create() {
-        // Initialize pause menu resources
-        // TODO: Load menu UI elements
+    public PauseScene(GameMaster gameMaster) {
+        super(gameMaster);
     }
     
     @Override
     public void show() {
         // Called when pause menu is shown
+        // TODO: Load menu UI elements
     }
     
     @Override
-    public void update(float deltaTime) {
+    public void render(float delta) {
         // Update pause menu logic
-        // TODO: Handle resume, quit, settings buttons
-    	@Override
-    	public void update(float deltaTime) {
-    	    // Example: Press R to resume
-    		
-    	    if (sceneManager.getGameMaster()
-    	                    .getIOManager()
-    	                    .isKeyPressed(Input.Keys.R)) {
+        // Example: Press R to resume
+        
+        if (gameMaster.getIoManager()
+                      .isKeyPressed(Input.Keys.R)) {
 
-    	        sceneManager.getGameMaster()
-    	                    .getAudioManager()
-    	                    .playUIClick();
+            gameMaster.getAudioManager()
+                      .playUIClick();
 
-    	        sceneManager.setState(new SimScene(sceneManager));
-    	    }
-    	}
-
-    
-    @Override
-    public void render() {
+            gameMaster.getSceneManager()
+                      .setState(new PlayScene(gameMaster));
+        }
+        
         // Render pause menu
         // TODO: Draw menu background, buttons, text
     }
     
     @Override
-    public void pause() {
-        // Already paused
-    }
-    
-    @Override
     public void resume() {
         // Return to previous scene
-        // TODO: Switch back to SimScene
-    }
-    
-    @Override
-    public void hide() {
-        // Called when pause menu is hidden
+        gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
     }
     
     @Override

@@ -27,6 +27,9 @@ public class PauseScene extends Scene {
     @Override
     public void show() {
         // Called when pause menu is shown
+    			sceneManager.getGameMaster()
+					.getAudioManager()
+					.playUIClick();
     }
     
     @Override

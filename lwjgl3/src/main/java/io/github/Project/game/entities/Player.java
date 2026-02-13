@@ -1,33 +1,29 @@
 package io.github.Project.game.entities;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.interfaces.InputMovement;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 
-public class Player extends Entity {
+public class Player extends CollidableEntity {
 
     private String texturePath;
-    private float width;
-    private float height;
 
     /**
      * @param input The InputMovement manager (needed for the strategy)
      */
     public Player(float posX, float posY, float width, float height, InputMovement input) {
-        // 1. Initialize Parent (Entity)
-        super(posX, posY, 100f); // Default speed 100
-        
-        this.width = width;
-        this.height = height;
+        // Initialize Parent (CollidableEntity -> Entity)
+        super(posX, posY, 200f, width, height);
 
-        // 2. Set the Strategy immediately using the Inner Class
+        // Set the Strategy immediately using the Inner Class
         this.movementStrategy = new PlayerInputStrategy(input);
     }
 
     // --- The Inner Strategy Class ---
-    // We make it 'private' because no one else needs to know this exists.
-    // We make it 'static' because it doesn't need to access Player's private variables directly;
-    // it works on the 'Entity' passed to the method.
     private static class PlayerInputStrategy implements IMovementStrategy {
         
         private final InputMovement input;
@@ -58,24 +54,28 @@ public class Player extends Entity {
         }
     }
 
-    // --- Player Specific Methods ---
-    
     @Override
     public void update(float deltaTime) {
-        // Run the strategy logic
         if (movementStrategy != null) {
             movementStrategy.updateVelocity(this);
         }
     }
 
     @Override
-    public void render() { 
-        // Render logic 
+    public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
+        // Draw as a cyan rectangle using the shared ShapeRenderer
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.CYAN);
+        shapeRenderer.rect(posX, posY, bounds.width, bounds.height);
+        shapeRenderer.end();
     }
 
-    // Getters
-    @Override public float getWidth() { return width; }
-    @Override public float getHeight() { return height; }
+    @Override
+    public float getWidth() { return bounds.width; }
+
+    @Override
+    public float getHeight() { return bounds.height; }
+
     public String getTexturePath() { return texturePath; }
     public void setTexturePath(String path) { this.texturePath = path; }
 }

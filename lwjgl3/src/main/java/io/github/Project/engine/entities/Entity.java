@@ -1,5 +1,7 @@
 package io.github.Project.engine.entities;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 
 public abstract class Entity {
@@ -43,7 +45,12 @@ public abstract class Entity {
     }
     
     public abstract void update(float deltaTime);
-    public abstract void render();
+    /**
+     * Renders this entity using shared renderers.
+     * @param batch Shared SpriteBatch (for textures)
+     * @param shapeRenderer Shared ShapeRenderer (for shapes)
+     */
+    public abstract void render(SpriteBatch batch, ShapeRenderer shapeRenderer);
     public abstract float getWidth();
     public abstract float getHeight();
 }

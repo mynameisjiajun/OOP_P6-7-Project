@@ -1,5 +1,7 @@
 package io.github.Project.engine.managers;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.Entity;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -56,11 +58,13 @@ public class EntityManager {
     }
     
     /**
-     * Renders all entities.
+     * Renders all entities using shared renderers.
+     * @param batch Shared SpriteBatch for texture-based entities
+     * @param shapeRenderer Shared ShapeRenderer for shape-based entities
      */
-    public void render() {
+    public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         for (Entity entity : entities) {
-            entity.render();
+            entity.render(batch, shapeRenderer);
         }
     }
      /**

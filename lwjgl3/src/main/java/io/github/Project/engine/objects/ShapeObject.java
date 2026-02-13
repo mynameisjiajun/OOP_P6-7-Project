@@ -1,6 +1,7 @@
 package io.github.Project.engine.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 import io.github.Project.engine.entities.Entity;
@@ -12,7 +13,6 @@ public abstract class ShapeObject extends Entity {
     protected Color color;
     protected float width;
     protected float height;
-    protected ShapeRenderer shapeRenderer;
     
     /**
      * Creates a new shape object.
@@ -25,7 +25,7 @@ public abstract class ShapeObject extends Entity {
     	this.width = width;
         this.height = height;
         this.color = color;
-        this.shapeRenderer = new ShapeRenderer();
+        // No longer creating own ShapeRenderer - use shared one from GameMaster
     }
     
     // Getters and setters

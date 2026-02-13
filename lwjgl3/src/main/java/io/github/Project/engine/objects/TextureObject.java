@@ -2,13 +2,13 @@ package io.github.Project.engine.objects;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 
 
 public abstract class TextureObject extends Entity {
 	protected Texture texture;
-	protected SpriteBatch spriteBatch;
 	protected float width;
 	protected float height;
 	/**
@@ -22,7 +22,7 @@ public abstract class TextureObject extends Entity {
 		this.width = width;
 		this.height = height;
 		this.texture = new Texture(texturefile);
-		this.spriteBatch = new SpriteBatch();
+		// No longer creating own SpriteBatch - use shared one from GameMaster
 	}
 
 	// Getters and setters

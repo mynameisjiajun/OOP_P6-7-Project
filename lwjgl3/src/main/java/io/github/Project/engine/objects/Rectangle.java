@@ -1,5 +1,6 @@
 package io.github.Project.engine.objects;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Color;
 import io.github.Project.engine.entities.Entity;
@@ -10,7 +11,7 @@ public class Rectangle extends ShapeObject {
 	}
 
 
-	public void render() {
+	public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(color);
 		shapeRenderer.rect(posX, posY, width, height);

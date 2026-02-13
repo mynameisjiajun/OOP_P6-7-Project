@@ -2,18 +2,50 @@ package io.github.Project.engine.managers;
 
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.entities.CollidableEntity;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CollisionManager {
     private EntityManager entityManager;
+    private AudioManager audioManager;
+    private List<CollisionListener> listeners;
 
-    public CollisionManager(EntityManager entityManager) {
+    /**
+     * Listener interface for collision events.
+     */
+    public interface CollisionListener {
+        void onCollision(Entity e1, Entity e2);
+    }
+
+    public CollisionManager(EntityManager entityManager, AudioManager audioManager) {
         this.entityManager = entityManager;
+        this.audioManager = audioManager;
+        this.listeners = new ArrayList<>();
     }
 
     /**
-     * The Workhorse: This is the loop that makes it a Class.
-     * It watches everyone on the field every frame.
+     * Adds a collision listener.
+     */
+    public void addListener(CollisionListener listener) {
+        listeners.add(listener);
+    }
+
+    /**
+     * Removes a collision listener.
+     */
+    public void removeListener(CollisionListener listener) {
+        listeners.remove(listener);
+    }
+
+    /**
+     * Clears all listeners.
+     */
+    public void clearListeners() {
+        listeners.clear();
+    }
+
+    /**
+     * Checks all entities for collisions every frame.
      */
     public void checkCollisions() {
         List<Entity> entities = entityManager.getEntities();
@@ -41,7 +73,12 @@ public class CollisionManager {
     }
 
     public void handleCollision(Entity e1, Entity e2) {
-        // This is where the Referee "blows the whistle"
-        // The specific reaction (bouncing/scoring) goes here or in the Scene
+        // Play collision sound
+        audioManager.playCollisionSound();
+
+        // Notify all listeners
+        for (CollisionListener listener : listeners) {
+            listener.onCollision(e1, e2);
+        }
     }
 }

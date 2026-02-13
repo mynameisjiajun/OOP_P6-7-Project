@@ -5,6 +5,7 @@ import io.github.Project.engine.managers.EntityManager;
 import io.github.Project.engine.managers.IOManager;
 import io.github.Project.engine.managers.MovementManager;
 import io.github.Project.engine.managers.SceneManager;
+import io.github.Project.engine.managers.AudioManager;
 
 /**
  * GameMaster - Central coordinator for all game systems.

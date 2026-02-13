@@ -13,15 +13,13 @@ public abstract class TextureObject {
 	protected float width;
 	protected float height;
 	protected float speed;
-	protected IMovementStrategy strategy;
-
 	/**
 	 * Creates a new texture object.
 	 * @param x X position
 	 * @param y Y position
 	 * @param texture Texture to render
 	 */
-	public TextureObject(String texturefile, float x, float y, float width, float height, float speed, IMovementStrategy strategy) {
+	public TextureObject(String texturefile, float x, float y, float width, float height, float speed) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -56,12 +54,6 @@ public abstract class TextureObject {
 	}
 	public void setHeight(float height) {
 		this.height = height;
-	}
-	public IMovementStrategy getStrategy() {
-		return strategy;
-	}
-	public void setStrategy(IMovementStrategy strategy) {
-		this.strategy = strategy;
 	}
 	public float getSpeed() {
 		return speed;

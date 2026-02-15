@@ -126,5 +126,5 @@ public class GameMaster extends Game {
     public InputMovement getInputMovement() {
     	return inputMovement;
 }
-    }
+} 
 

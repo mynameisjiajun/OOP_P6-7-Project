@@ -69,6 +69,7 @@ public class PauseScene extends Scene {
         optionsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new OptionsScene(gameMaster));
             }
         });
@@ -76,6 +77,7 @@ public class PauseScene extends Scene {
         mainMenuButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
             }
         });

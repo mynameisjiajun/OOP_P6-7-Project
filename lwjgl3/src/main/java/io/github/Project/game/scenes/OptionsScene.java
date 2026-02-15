@@ -82,6 +82,7 @@ public class OptionsScene extends Scene {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
             }
         });

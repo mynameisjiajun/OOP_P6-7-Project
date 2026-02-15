@@ -1,10 +1,12 @@
 package io.github.Project.engine.main;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.managers.EntityManager;
 import io.github.Project.engine.managers.IOManager;
+import io.github.Project.engine.input.InputMovement;
 import io.github.Project.engine.managers.MovementManager;
 import io.github.Project.engine.managers.CollisionManager;
 import io.github.Project.engine.managers.SceneManager;
@@ -23,6 +25,7 @@ public class GameMaster extends Game {
     private CollisionManager collisionManager;
     private SceneManager sceneManager;
     private AudioManager audioManager;
+    private InputMovement inputMovement;
 
     // Shared renderers - ONE for the whole game (GPU-efficient)
     private SpriteBatch sharedBatch;
@@ -43,6 +46,8 @@ public class GameMaster extends Game {
         this.movementManager = new MovementManager();
         this.audioManager = new AudioManager();
         this.collisionManager = new CollisionManager(entityManager, audioManager);
+        this.inputMovement = new InputMovement();
+        Gdx.input.setInputProcessor(this.inputMovement);
 
         // Create ONE shared renderer for all entities
         this.sharedBatch = new SpriteBatch();
@@ -61,7 +66,7 @@ public class GameMaster extends Game {
      */
     @Override
     public void render() {
-        float deltaTime = com.badlogic.gdx.Gdx.graphics.getDeltaTime();
+        float deltaTime = Gdx.graphics.getDeltaTime();
         
         // Update game systems (MovementManager already calls entity.update())
         // DO NOT call entityManager.update() here - that would double-update!
@@ -117,4 +122,9 @@ public class GameMaster extends Game {
     public ShapeRenderer getSharedShapeRenderer() {
         return sharedShapeRenderer;
     }
+
+    public InputMovement getInputMovement() {
+    	return inputMovement;
 }
+} 
+

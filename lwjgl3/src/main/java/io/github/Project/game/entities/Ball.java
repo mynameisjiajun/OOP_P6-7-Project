@@ -5,8 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.CollidableEntity;
-import io.github.Project.engine.entities.Entity;
-import io.github.Project.engine.interfaces.IMovementStrategy;
+import io.github.Project.game.movementstrategy.BounceMovementStrategy;
 
 /**
  * A ball that bounces off the screen edges.
@@ -36,67 +35,26 @@ public class Ball extends CollidableEntity {
         this.texture = new Texture(Gdx.files.internal("yellow-plastic-ball.jpg"));
 
         // Set the bounce strategy
-        this.movementStrategy = new BounceStrategy();
 
         // Give the ball a random initial direction
         double angle = Math.random() * 2 * Math.PI;
         this.vx = (float) Math.cos(angle) * speed;
         this.vy = (float) Math.sin(angle) * speed;
     }
-
-    /**
-     * Strategy that bounces the ball off screen edges.
-     */
-    private static class BounceStrategy implements IMovementStrategy {
-        @Override
-        public void updateVelocity(Entity entity) {
-            Ball ball = (Ball) entity;
-
-            // Bounce off left/right walls
-            if (ball.getPosX() <= 0) {
-                ball.setPosX(0);
-                ball.setVx(Math.abs(ball.getVx()));
-            } else if (ball.getPosX() + ball.getWidth() >= ball.screenWidth) {
-                ball.setPosX(ball.screenWidth - ball.getWidth());
-                ball.setVx(-Math.abs(ball.getVx()));
-            }
-
-            // Bounce off top/bottom walls
-            if (ball.getPosY() <= 0) {
-                ball.setPosY(0);
-                ball.setVy(Math.abs(ball.getVy()));
-            } else if (ball.getPosY() + ball.getHeight() >= ball.screenHeight) {
-                ball.setPosY(ball.screenHeight - ball.getHeight());
-                ball.setVy(-Math.abs(ball.getVy()));
-            }
-        }
-    }
-
-    @Override
-    public void update(float deltaTime) {
-        if (movementStrategy != null) {
-            movementStrategy.updateVelocity(this);
-        }
-    }
-
-    /**
-     * Reverses the ball's X velocity (used on collision).
-     */
-    public void bounceX() {
-        this.vx = -this.vx;
-    }
-
-    /**
-     * Reverses the ball's Y velocity (used on collision).
-     */
-    public void bounceY() {
-        this.vy = -this.vy;
-    }
-
     public void setScreenSize(float width, float height) {
-        this.screenWidth = width;
-        this.screenHeight = height;
-    }
+		this.screenWidth = width;
+		this.screenHeight = height;
+	}
+    public float getScreenWidth() { 
+    	return screenWidth; 
+    	}
+    public float getScreenHeight() { 
+    	return screenHeight; 
+    	}
+    
+    public void bounceY() {
+		this.vy = -this.vy;
+	}
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
@@ -118,4 +76,4 @@ public class Ball extends CollidableEntity {
 
     @Override
     public float getHeight() { return bounds.height; }
-}
+    }

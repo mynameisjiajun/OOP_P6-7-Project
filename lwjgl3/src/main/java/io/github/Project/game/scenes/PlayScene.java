@@ -7,6 +7,8 @@ import io.github.Project.engine.interfaces.InputMovement;
 import io.github.Project.engine.managers.CollisionManager;
 import io.github.Project.game.entities.Player;
 import io.github.Project.game.entities.Ball;
+import io.github.Project.game.movementstrategy.PlayerMovementStrategy;
+import io.github.Project.game.movementstrategy.BounceMovementStrategy;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
@@ -85,8 +87,8 @@ public class PlayScene extends Scene {
         // Register entities with managers
         gameMaster.getEntityManager().addEntity(player);
         gameMaster.getEntityManager().addEntity(ball);
-        gameMaster.getMovementManager().registerEntity(player);
-        gameMaster.getMovementManager().registerEntity(ball);
+        gameMaster.getMovementManager().registerEntity(player, new PlayerMovementStrategy());
+        gameMaster.getMovementManager().registerEntity(ball, new BounceMovementStrategy());
         
         // Set up collision listener - when ball hits player, bounce it
         collisionListener = new CollisionManager.CollisionListener() {
@@ -169,6 +171,10 @@ public class PlayScene extends Scene {
             gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
             return;
         }
+        
+        gameMaster.getMovementManager().updateMovements(delta);
+        gameMaster.getCollisionManager().checkCollisions();
+        gameMaster.getEntityManager().update(delta);
         
         // Entities are rendered by GameMaster via EntityManager.render()
         // using shared SpriteBatch & ShapeRenderer - no local rendering needed!

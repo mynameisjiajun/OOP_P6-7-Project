@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.Entity;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -35,6 +34,11 @@ public class EntityManager {
      * Removes an entity from the manager.
      * @param entity The entity to remove
      */
+    public void update(float deltaTime) {
+        for (Entity entity : entities) {
+            entity.update(deltaTime);
+        }
+    }
     public void removeEntity(Entity entity) {
         entities.remove(entity);
     }
@@ -46,17 +50,6 @@ public class EntityManager {
     public List<Entity> getEntities() {
         return entities;
     }
-
-    /**
-     * Updates all entities.
-     * @param deltaTime Time elapsed since last update
-     */
-    public void update(float deltaTime) {
-        for (Entity entity : entities) {
-            entity.update(deltaTime);
-        }
-    }
-    
     /**
      * Renders all entities using shared renderers.
      * @param batch Shared SpriteBatch for texture-based entities

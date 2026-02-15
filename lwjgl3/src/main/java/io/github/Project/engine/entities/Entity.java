@@ -2,18 +2,15 @@ package io.github.Project.engine.entities;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import io.github.Project.engine.interfaces.IMovementStrategy;
 
 public abstract class Entity {
     protected float posX;
     protected float posY;
     protected float vx;
     protected float vy;
-    
     // ADDED: Speed is needed for the strategy to calculate velocity
     protected float speed; 
     
-    protected IMovementStrategy movementStrategy;
     
     public Entity(float posX, float posY, float speed) {
         this.posX = posX;
@@ -39,18 +36,18 @@ public abstract class Entity {
     public void setVx(float vx) { this.vx = vx; }
     public float getVy() { return vy; }
     public void setVy(float vy) { this.vy = vy; }
-    public IMovementStrategy getMovementStrategy() { return movementStrategy; }
-    public void setMovementStrategy(IMovementStrategy movementStrategy) { 
-        this.movementStrategy = movementStrategy; 
-    }
     
-    public abstract void update(float deltaTime);
     /**
      * Renders this entity using shared renderers.
      * @param batch Shared SpriteBatch (for textures)
      * @param shapeRenderer Shared ShapeRenderer (for shapes)
      */
     public abstract void render(SpriteBatch batch, ShapeRenderer shapeRenderer);
+    public void update(float deltaTime) {
+		// Default movement logic: update position based on velocity
+		this.posX += this.vx * deltaTime;
+		this.posY += this.vy * deltaTime;
+	}
     public abstract float getWidth();
     public abstract float getHeight();
 }

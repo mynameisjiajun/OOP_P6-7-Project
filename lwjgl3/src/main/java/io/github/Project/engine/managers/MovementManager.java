@@ -1,39 +1,38 @@
 package io.github.Project.engine.managers;
 
 import io.github.Project.engine.entities.Entity;
-import java.util.ArrayList;
-import java.util.List;
+import io.github.Project.engine.interfaces.IMovementStrategy;
+import java.util.HashMap;
+import java.util.Map;
 
 // 1. REMOVE "implements IMoveable"
 public class MovementManager { 
     
-    private List<Entity> entities;
+    private Map<Entity, IMovementStrategy> entityStrategies; // Map to hold entities and their movement strategies
 
     public MovementManager() {
-        this.entities = new ArrayList<>();
+        this.entityStrategies = new HashMap<>();
     }
 
-    public void registerEntity(Entity entity) {
-        if (entity != null && !entities.contains(entity)) {
-            entities.add(entity);
+    public void registerEntity(Entity entity, IMovementStrategy strategy) {
+        if (entity != null && strategy != null && !entityStrategies.containsKey(entity)) {
+            entityStrategies.put(entity, strategy);
         }
     }
 
     public void unregisterEntity(Entity entity) {
-        entities.remove(entity);
+        entityStrategies.remove(entity);
     }
 
     /**
      * Updates all registered entities' movements.
      */
     public void updateMovements(float deltaTime) {
-        for (Entity entity : entities) {
-            // 2. LOGIC MOVED HERE
-            // We don't need 'moveIdentity'. We just do the work right here.
-
+        for (Map.Entry<Entity, IMovementStrategy> entry : entityStrategies.entrySet()) {
+            	Entity entity = entry.getKey();
+            	IMovementStrategy strategy = entry.getValue();
             // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
             // (The Player/Entity determines its own desired velocity)
-            entity.update(deltaTime); 
 
             // B. Physics Phase: Apply Velocity (Velocity -> Position)
             // This is the "Shared Physics" logic that applies to everyone.
@@ -42,6 +41,7 @@ public class MovementManager {
 
             entity.setPosX(newX);
             entity.setPosY(newY);
+            strategy.updateVelocity(entity);
         }
     }
     

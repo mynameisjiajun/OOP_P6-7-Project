@@ -13,7 +13,7 @@ public class IOManager {
      * Creates a new IOManager.
      */
     public IOManager() {
-        // No input processor registration (SRP-compliant)
+        
     }
 
     /**

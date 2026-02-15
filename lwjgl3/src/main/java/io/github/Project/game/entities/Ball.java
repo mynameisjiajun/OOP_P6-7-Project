@@ -4,12 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import io.github.Project.engine.entities.CollidableEntity;
-import io.github.Project.game.movementstrategy.BounceMovementStrategy;
 
-/**
- * A ball that bounces off the screen edges.
- */
+import io.github.Project.engine.entities.CollidableEntity;
+
+// A ball that bounces off the screen edges.
+
 public class Ball extends CollidableEntity {
 
     private float screenWidth;
@@ -35,6 +34,7 @@ public class Ball extends CollidableEntity {
         this.texture = new Texture(Gdx.files.internal("yellow-plastic-ball.jpg"));
 
         // Set the bounce strategy
+        this.collisionTag = "ball";
 
         // Give the ball a random initial direction
         double angle = Math.random() * 2 * Math.PI;

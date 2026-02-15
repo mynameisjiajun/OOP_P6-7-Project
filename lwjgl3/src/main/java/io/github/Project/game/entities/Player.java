@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.CollidableEntity;
-import io.github.Project.engine.interfaces.InputMovement;
+import io.github.Project.engine.input.InputMovement;
 
 public class Player extends CollidableEntity {
 
@@ -18,19 +18,34 @@ public class Player extends CollidableEntity {
         // Initialize Parent (CollidableEntity -> Entity)
         super(posX, posY, 200f, width, height);
         this.input = input; // Store the input reference for the strategy
-
-        // Set the Strategy immediately using the Inner Class
+        
+        //Set collision tag for identification
+        this.collisionTag = "player";
     }
 
     public InputMovement getInput() {
-    	return input;
+        return input;
     }
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        // Draw as a cyan rectangle using the shared ShapeRenderer
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.CYAN);
+        
+        // Change color when at boundaries
+        float screenWidth = com.badlogic.gdx.Gdx.graphics.getWidth();
+        float screenHeight = com.badlogic.gdx.Gdx.graphics.getHeight();
+        
+        boolean atLeftEdge = posX <= 0;
+        boolean atRightEdge = posX + bounds.width >= screenWidth;
+        boolean atTopEdge = posY + bounds.height >= screenHeight;
+        boolean atBottomEdge = posY <= 0;
+        
+        if (atLeftEdge || atRightEdge || atTopEdge || atBottomEdge) {
+            shapeRenderer.setColor(Color.RED);  // RED when touching boundary!
+        } else {
+            shapeRenderer.setColor(Color.CYAN);  // Normal color
+        }
+        
         shapeRenderer.rect(posX, posY, bounds.width, bounds.height);
         shapeRenderer.end();
     }

@@ -26,9 +26,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
- * Main play/game scene.
- * Player controls a rectangle to bounce a yellow ball around.
- * Collision with the ball plays a sound.
+ * DEBUG VERSION - Main play/game scene with console logging.
  */
 public class PlayScene extends Scene {
     private Stage stage;
@@ -49,6 +47,8 @@ public class PlayScene extends Scene {
     
     @Override
     public void show() {
+        System.out.println("=== PlayScene.show() called ===");
+        
         // Play background music
         gameMaster.getAudioManager().startDefaultBackgroundMusic();
         
@@ -75,6 +75,9 @@ public class PlayScene extends Scene {
             inputMovement
         );
         
+        System.out.println("Player created at: (" + player.getPosX() + ", " + player.getPosY() + ")");
+        System.out.println("Player collision tag: " + player.getCollisionTag());
+        
         // Create bouncing ball at center
         ball = new Ball(
             screenW / 2f - 15,  // center X
@@ -84,35 +87,91 @@ public class PlayScene extends Scene {
             screenW, screenH    // screen bounds for bouncing
         );
         
+        System.out.println("Ball created at: (" + ball.getPosX() + ", " + ball.getPosY() + ")");
+        System.out.println("Ball collision tag: " + ball.getCollisionTag());
+        
         // Register entities with managers
         gameMaster.getEntityManager().addEntity(player);
         gameMaster.getEntityManager().addEntity(ball);
         gameMaster.getMovementManager().registerEntity(player, new PlayerMovementStrategy());
         gameMaster.getMovementManager().registerEntity(ball, new BounceMovementStrategy());
         
-        // Set up collision listener - when ball hits player, bounce it
+        System.out.println("Entities registered with managers");
+        
+        // Set up collision listener using CollisionInfo
         collisionListener = new CollisionManager.CollisionListener() {
             @Override
-            public void onCollision(Entity e1, Entity e2) {
-                // Find which entity is the ball
-                Ball b = null;
-                if (e1 instanceof Ball) b = (Ball) e1;
-                if (e2 instanceof Ball) b = (Ball) e2;
+            public void onCollision(CollisionManager.CollisionInfo info) {
+                System.out.println("=== COLLISION DETECTED ===");
+                System.out.println("Entity 1 tag: " + info.tag1);
+                System.out.println("Entity 2 tag: " + info.tag2);
+                System.out.println("Overlap X: " + info.overlapX);
+                System.out.println("Overlap Y: " + info.overlapY);
                 
-                if (b != null) {
-                    // Bounce the ball away from the player
-                    b.bounceY();
+                // Check if this is a ball-player collision
+                if (info.isBetween("ball", "player")) {
+                    System.out.println(">>> Ball-Player collision confirmed!");
                     
-                    // Push ball out of player to prevent repeated collisions
-                    if (b.getVy() > 0) {
-                        b.setPosY(player.getPosY() + player.getHeight() + 1);
+                    Ball b = null;
+                    Player p = null;
+                    
+                    // Identify which entity is which
+                    if (info.entity1 instanceof Ball) {
+                        b = (Ball) info.entity1;
+                        p = (Player) info.entity2;
                     } else {
-                        b.setPosY(player.getPosY() - b.getHeight() - 1);
+                        b = (Ball) info.entity2;
+                        p = (Player) info.entity1;
                     }
+                    
+                    if (b != null && p != null) {
+                        System.out.println("Ball pos before: (" + b.getPosX() + ", " + b.getPosY() + ")");
+                        System.out.println("Ball velocity before: (" + b.getVx() + ", " + b.getVy() + ")");
+                        
+                        // Determine bounce direction based on overlap
+                        if (info.overlapY < info.overlapX) {
+                            System.out.println(">>> VERTICAL collision - bouncing Y");
+                            // Vertical collision (top/bottom of paddle)
+                            b.bounceY();
+                            
+                            // Push ball out of player to prevent sticking
+                            if (b.getPosY() < p.getPosY()) {
+                                // Ball hit from below
+                                b.setPosY(p.getPosY() - b.getHeight() - 1);
+                                System.out.println("Ball pushed below paddle");
+                            } else {
+                                // Ball hit from above
+                                b.setPosY(p.getPosY() + p.getHeight() + 1);
+                                System.out.println("Ball pushed above paddle");
+                            }
+                        } else {
+                            System.out.println(">>> HORIZONTAL collision - bouncing X");
+                            // Horizontal collision (sides of paddle)
+                            b.setVx(-b.getVx());
+                            
+                            // Push ball out of player horizontally
+                            if (b.getPosX() < p.getPosX()) {
+                                // Ball hit from left
+                                b.setPosX(p.getPosX() - b.getWidth() - 1);
+                                System.out.println("Ball pushed left of paddle");
+                            } else {
+                                // Ball hit from right
+                                b.setPosX(p.getPosX() + p.getWidth() + 1);
+                                System.out.println("Ball pushed right of paddle");
+                            }
+                        }
+                        
+                        System.out.println("Ball pos after: (" + b.getPosX() + ", " + b.getPosY() + ")");
+                        System.out.println("Ball velocity after: (" + b.getVx() + ", " + b.getVy() + ")");
+                    }
+                } else {
+                    System.out.println(">>> Not a ball-player collision");
                 }
             }
         };
+        
         gameMaster.getCollisionManager().addListener(collisionListener);
+        System.out.println("Collision listener registered");
         
         // Create skin & UI
         skin = createSkin();
@@ -133,6 +192,8 @@ public class PlayScene extends Scene {
         table.pad(20);
         table.add(pauseButton).width(100).height(40);
         stage.addActor(table);
+        
+        System.out.println("=== PlayScene.show() complete ===\n");
     }
     
     private Skin createSkin() {
@@ -177,7 +238,6 @@ public class PlayScene extends Scene {
         gameMaster.getEntityManager().update(delta);
         
         // Entities are rendered by GameMaster via EntityManager.render()
-        // using shared SpriteBatch & ShapeRenderer - no local rendering needed!
         
         // Update and draw UI stage (on top of game)
         stage.act(delta);

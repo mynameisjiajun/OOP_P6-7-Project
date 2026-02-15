@@ -1,4 +1,4 @@
-package io.github.Project.engine.interfaces;
+package io.github.Project.engine.input;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;

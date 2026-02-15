@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.CollidableEntity;
-import io.github.Project.engine.interfaces.InputMovement;
+import io.github.Project.engine.input.InputMovement;  
 
 public class Player extends CollidableEntity {
 

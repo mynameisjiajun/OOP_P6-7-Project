@@ -2,7 +2,7 @@ package io.github.Project.game.movementstrategy;
 
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.interfaces.IMovementStrategy;
-import io.github.Project.engine.interfaces.InputMovement;
+import io.github.Project.engine.input.InputMovement;
 import io.github.Project.game.entities.Player;
 
 public class PlayerMovementStrategy implements IMovementStrategy {

@@ -56,6 +56,7 @@ public class MainMenuScene extends Scene {
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
             }
         });
@@ -63,6 +64,7 @@ public class MainMenuScene extends Scene {
         optionsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 gameMaster.getSceneManager().setState(new OptionsScene(gameMaster));
             }
         });
@@ -70,6 +72,7 @@ public class MainMenuScene extends Scene {
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+            	gameMaster.getAudioManager().playUIClick();
                 Gdx.app.exit();
             }
         });

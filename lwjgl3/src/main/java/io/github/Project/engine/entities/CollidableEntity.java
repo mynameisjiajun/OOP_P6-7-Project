@@ -2,9 +2,6 @@ package io.github.Project.engine.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 
-/**
- * A middle-tier class that adds collision boundaries to an Entity.
- */
 public abstract class CollidableEntity extends Entity {
     // physical hitbox position of the entity
     protected Rectangle bounds;
@@ -18,9 +15,8 @@ public abstract class CollidableEntity extends Entity {
         this.bounds = new Rectangle(posX, posY, width, height);
     }
 
-    /**
-     * Updates the position to follow the entity.
-     */
+    //Updates the position to follow the entity.
+     
     public void updateBounds() {
         bounds.setPosition(getPosX(), getPosY());
     }
@@ -29,7 +25,7 @@ public abstract class CollidableEntity extends Entity {
         return bounds;
     }
     
-    // NEW: Collision tag accessors
+    //Collision tag accessors
     public String getCollisionTag() {
         return collisionTag;
     }

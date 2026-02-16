@@ -11,7 +11,7 @@ public class CollisionManager {
     private List<CollisionListener> listeners;
     private List<CollisionPair> collidedThisFrame;
 
-    // Holds information about a collision between two entities.
+// Holds information about collision between entities.
      
     public static class CollisionInfo {
         public final Entity entity1;
@@ -31,13 +31,13 @@ public class CollisionManager {
             this.overlapY = oy;
         }
         
-        //Check if this collision involves a specific tag.
+        //Check collision involves a specific tag
          
         public boolean involves(String tag) {
             return tag1.equals(tag) || tag2.equals(tag);
         }
         
-        //Check if this collision is between two specific tags.
+        //Check collision is between two specific tag
          
         public boolean isBetween(String tagA, String tagB) {
             return (tag1.equals(tagA) && tag2.equals(tagB)) ||
@@ -45,13 +45,13 @@ public class CollisionManager {
         }
     }
 
-    // Listener interface for collision events.
+    // Listener interface for collision events
      
     public interface CollisionListener {
         void onCollision(CollisionInfo info);
     }
     
-    // Helper class to track collision pairs and prevent duplicate handling.
+    // Helper class to track collision pairs and prevent duplicate handling
      
     private static class CollisionPair {
         Entity e1, e2;
@@ -82,30 +82,26 @@ public class CollisionManager {
         this.collidedThisFrame = new ArrayList<>();
     }
 
-    /**
-     * Adds a collision listener.
-     */
+    //Adds a collision listener
+     
     public void addListener(CollisionListener listener) {
         listeners.add(listener);
     }
 
-    /**
-     * Removes a collision listener.
-     */
+    //Removes a collision listener
+     
     public void removeListener(CollisionListener listener) {
         listeners.remove(listener);
     }
 
-    /**
-     * Clears all listeners.
-     */
+    //Clears all listeners
+     
     public void clearListeners() {
         listeners.clear();
     }
 
-    /**
-     * Checks all entities for collisions every frame.
-     */
+    //Checks all entities for collisions every frame
+    
     public void checkCollisions() {
         collidedThisFrame.clear();
         List<Entity> entities = entityManager.getEntities();
@@ -127,9 +123,8 @@ public class CollisionManager {
         }
     }
 
-    /**
-     * Enhanced overlap detection with penetration depth calculation.
-     */
+    //Enhanced overlap detection with penetration depth calculation
+     
     private CollisionInfo checkOverlap(Entity e1, Entity e2) {
         if (!(e1 instanceof CollidableEntity) || !(e2 instanceof CollidableEntity)) {
             return null;

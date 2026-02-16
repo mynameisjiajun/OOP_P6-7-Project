@@ -2,6 +2,7 @@ package io.github.Project.game.entities;
 
 import com.badlogic.gdx.graphics.Color;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import io.github.Project.engine.entities.CollidableEntity;
@@ -53,6 +54,16 @@ import io.github.Project.engine.entities.Entity;
 public class Player extends ShapeObject {
 
     public Player(float posX, float posY, float width, float height, InputMovement input) {
+=======
+import io.github.Project.engine.interfaces.IMovementStrategy;
+import io.github.Project.engine.interfaces.InputMovement;
+import io.github.Project.engine.objects.ShapeObject;
+import io.github.Project.engine.entities.Entity;
+
+public class Player extends ShapeObject {
+
+    public Player(float posX, float posY, float width, float height, InputMovement input) {
+>>>>>>> Stashed changes
         super(posX, posY, width, height, 200f, Color.RED);
         this.movementStrategy = new PlayerInputStrategy(input);
     }
@@ -89,5 +100,8 @@ public class Player extends ShapeObject {
             entity.setVy(dirY * entity.getSpeed());
         }
     }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }

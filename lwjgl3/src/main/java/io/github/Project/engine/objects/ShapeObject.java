@@ -3,6 +3,7 @@ package io.github.Project.engine.objects;
 import com.badlogic.gdx.Gdx; // Make sure this is imported
 import com.badlogic.gdx.graphics.Color;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import io.github.Project.engine.entities.Entity;
 
 /**
@@ -42,6 +43,19 @@ public abstract class ShapeObject extends CollidableEntity {
         this.color = color;
         this.shapeRenderer = new ShapeRenderer();
 >>>>>>> Stashed changes
+=======
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import io.github.Project.engine.entities.CollidableEntity;
+
+public abstract class ShapeObject extends CollidableEntity {
+    protected Color color;
+    protected ShapeRenderer shapeRenderer;
+
+    public ShapeObject(float x, float y, float width, float height, float speed, Color color) {
+        super(x, y, speed, width, height);
+        this.color = color;
+        this.shapeRenderer = new ShapeRenderer();
+>>>>>>> Stashed changes
     }
 
     @Override
@@ -62,6 +76,7 @@ public abstract class ShapeObject extends CollidableEntity {
         shapeRenderer.rect(getPosX(), getPosY(), getWidth(), getHeight());
         shapeRenderer.end();
     }
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     
     public void setColor(Color color) {
@@ -84,6 +99,8 @@ public abstract class ShapeObject extends CollidableEntity {
     public void setHeight(float height) {
         this.height = height;
     }
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 }

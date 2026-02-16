@@ -1,6 +1,8 @@
 package io.github.Project.engine.objects;
 
+import com.badlogic.gdx.Gdx; // Make sure this is imported
 import com.badlogic.gdx.graphics.Color;
+<<<<<<< Updated upstream
 import io.github.Project.engine.entities.Entity;
 
 /**
@@ -27,12 +29,40 @@ public abstract class ShapeObject extends Entity {
         this.height = height;
         this.color = color;
         // No longer creating own ShapeRenderer - use shared one from GameMaster
+=======
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import io.github.Project.engine.entities.CollidableEntity;
+
+public abstract class ShapeObject extends CollidableEntity {
+    protected Color color;
+    protected ShapeRenderer shapeRenderer;
+
+    public ShapeObject(float x, float y, float width, float height, float speed, Color color) {
+        super(x, y, speed, width, height);
+        this.color = color;
+        this.shapeRenderer = new ShapeRenderer();
+>>>>>>> Stashed changes
     }
-    
-    // Getters and setters
-    public Color getColor() {
-        return color;
+
+    @Override
+    public float getWidth() { return bounds.width; }
+
+    @Override
+    public float getHeight() { return bounds.height; }
+
+    @Override
+    public void render() {
+        // --- FIX: Tell the renderer how big the screen is ---
+        shapeRenderer.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        shapeRenderer.updateMatrices();
+        // ---------------------------------------------------
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(color);
+        shapeRenderer.rect(getPosX(), getPosY(), getWidth(), getHeight());
+        shapeRenderer.end();
     }
+<<<<<<< Updated upstream
     
     public void setColor(Color color) {
         this.color = color;
@@ -54,4 +84,6 @@ public abstract class ShapeObject extends Entity {
     public void setHeight(float height) {
         this.height = height;
     }
+=======
+>>>>>>> Stashed changes
 }

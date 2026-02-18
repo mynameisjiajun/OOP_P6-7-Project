@@ -5,7 +5,6 @@ import io.github.Project.engine.interfaces.IMovementStrategy;
 import java.util.HashMap;
 import java.util.Map;
 
-// 1. REMOVE "implements IMoveable"
 public class MovementManager { 
     
     private Map<Entity, IMovementStrategy> entityStrategies; // Map to hold entities and their movement strategies
@@ -45,5 +44,4 @@ public class MovementManager {
         }
     }
     
-    // 3. DELETE 'moveIdentity' method entirely.
 }

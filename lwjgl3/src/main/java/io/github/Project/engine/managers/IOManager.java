@@ -35,13 +35,22 @@ public class IOManager {
         FileHandle file = Gdx.files.local(filePath);
         file.writeString(content, false);
     }
+    public String readLocalFile(String filePath) {
+        FileHandle file = Gdx.files.local(filePath);
+        return file.exists() ? file.readString() : null;
+    }
+
+    public boolean localFileExists(String filePath) {
+        return Gdx.files.local(filePath).exists();
+    }
+
 
     /**
      * Checks if a file exists in internal storage.
      * @param filePath The file path
      * @return true if exists, false otherwise
      */
-    public boolean fileExists(String filePath) {
+    public boolean internalfileExists(String filePath) {
         return Gdx.files.internal(filePath).exists();
     }
 }

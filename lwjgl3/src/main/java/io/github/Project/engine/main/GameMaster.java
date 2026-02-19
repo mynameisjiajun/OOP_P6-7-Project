@@ -20,12 +20,16 @@ import io.github.Project.game.scenes.MainMenuScene;
  */
 public class GameMaster extends Game {
     private EntityManager entityManager;
-    private IOManager ioManager;
     private MovementManager movementManager;
     private CollisionManager collisionManager;
     private SceneManager sceneManager;
     private AudioManager audioManager;
     private InputMovement inputMovement;
+    private IOManager ioManager;
+    
+    // Persistent settings file
+    private static final String SETTINGS_FILE = "settings.txt";
+
 
     // Shared renderers - ONE for the whole game (GPU-efficient)
     private SpriteBatch sharedBatch;
@@ -42,12 +46,21 @@ public class GameMaster extends Game {
     @Override
     public void create() {
         this.entityManager = new EntityManager();
-        this.ioManager = new IOManager();
         this.movementManager = new MovementManager();
         this.audioManager = new AudioManager();
         this.collisionManager = new CollisionManager(entityManager, audioManager);
         this.inputMovement = new InputMovement();
         Gdx.input.setInputProcessor(this.inputMovement);
+        this.ioManager = new IOManager();
+        
+        // IOManager integration: load persistent data
+        if (ioManager.localFileExists("settings.txt")) {
+            String settings = ioManager.readLocalFile("settings.txt");
+            System.out.println("Loaded settings:\n" + settings);
+        } else {
+            System.out.println("No settings found (first run).");
+            ioManager.writeLocalFile("settings.txt", "volume=1.0\nmuted=false");
+        }
 
         // Create ONE shared renderer for all entities
         this.sharedBatch = new SpriteBatch();
@@ -86,11 +99,19 @@ public class GameMaster extends Game {
      */
     @Override
     public void dispose() {
+
+        // IOManager integration: save persistent data
+        if (ioManager != null) {
+            ioManager.writeLocalFile(SETTINGS_FILE, "volume=1.0\nmuted=false");
+        }
+
         super.dispose();
-        audioManager.dispose();
+
+        if (audioManager != null) audioManager.dispose();
         if (sharedBatch != null) sharedBatch.dispose();
         if (sharedShapeRenderer != null) sharedShapeRenderer.dispose();
     }
+
     
     // Getters for all managers
     public EntityManager getEntityManager() {

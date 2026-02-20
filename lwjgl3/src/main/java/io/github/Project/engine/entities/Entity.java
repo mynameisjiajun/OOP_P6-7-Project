@@ -8,7 +8,6 @@ public abstract class Entity {
     protected float posY;
     protected float vx;
     protected float vy;
-    // ADDED: Speed is needed for the strategy to calculate velocity
     protected float speed; 
     
     
@@ -21,13 +20,9 @@ public abstract class Entity {
     }
     
     // --- Getters and Setters ---
-    // (Existing ones...)
 
-    // ADDED: Speed Accessors
     public float getSpeed() { return speed; }
     public void setSpeed(float speed) { this.speed = speed; }
-
-    // ... Rest of your getters/setters/abstract methods
     public float getPosX() { return posX; }
     public void setPosX(float posX) { this.posX = posX; }
     public float getPosY() { return posY; }
@@ -38,7 +33,7 @@ public abstract class Entity {
     public void setVy(float vy) { this.vy = vy; }
     
     /**
-     * Renders this entity using shared renderers.
+     * Renders this entity using shared renderer.
      * @param batch Shared SpriteBatch (for textures)
      * @param shapeRenderer Shared ShapeRenderer (for shapes)
      */

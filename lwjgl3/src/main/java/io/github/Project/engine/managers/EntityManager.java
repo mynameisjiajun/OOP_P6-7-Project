@@ -34,14 +34,16 @@ public class EntityManager {
      * Removes an entity from the manager.
      * @param entity The entity to remove
      */
+    public void removeEntity(Entity entity) {
+        entities.remove(entity);
+    }
+    
     public void update(float deltaTime) {
         for (Entity entity : entities) {
             entity.update(deltaTime);
         }
     }
-    public void removeEntity(Entity entity) {
-        entities.remove(entity);
-    }
+   
     
     /**
      * Gets all entities.
@@ -51,7 +53,7 @@ public class EntityManager {
         return entities;
     }
     /**
-     * Renders all entities using shared renderers.
+     * Renders all entities using shared renderer.
      * @param batch Shared SpriteBatch for texture-based entities
      * @param shapeRenderer Shared ShapeRenderer for shape-based entities
      */

@@ -19,7 +19,7 @@ public abstract class Entity {
         this.vy = 0;
     }
     
-    // --- Getters and Setters ---
+    // Getters and Setters
 
     public float getSpeed() { return speed; }
     public void setSpeed(float speed) { this.speed = speed; }

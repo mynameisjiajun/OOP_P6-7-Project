@@ -39,17 +39,17 @@ public class OptionsScene extends Scene {
 
         skin = createSkin();
 
-        // --- Label style ---
+        // Label style 
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = skin.getFont("default");
         labelStyle.fontColor = Color.WHITE;
         skin.add("default", labelStyle);
 
-        // --- Title ---
+        // Title 
         Label titleLabel = new Label("OPTIONS", skin);
         titleLabel.setFontScale(2);
 
-        // --- Volume label + slider ---
+        // Volume label + slider
         float currentVolume = gameMaster.getAudioManager().getVolume();
         final Label volumeLabel = new Label("Volume: " + (int)(currentVolume * 100) + "%", skin);
 
@@ -65,7 +65,7 @@ public class OptionsScene extends Scene {
             }
         });
 
-        // --- Mute button ---
+        // Mute button
         final boolean isMuted = gameMaster.getAudioManager().isMuted();
         final TextButton muteButton = new TextButton(isMuted ? "Unmute" : "Mute", skin);
         muteButton.addListener(new ClickListener() {
@@ -77,7 +77,7 @@ public class OptionsScene extends Scene {
             }
         });
 
-        // --- Back button ---
+        // Back button
         TextButton backButton = new TextButton("Back", skin);
         backButton.addListener(new ClickListener() {
             @Override
@@ -87,7 +87,7 @@ public class OptionsScene extends Scene {
             }
         });
 
-        // --- Layout ---
+        // Layout
         Table table = new Table();
         table.setFillParent(true);
         table.center();
@@ -113,7 +113,7 @@ public class OptionsScene extends Scene {
         skin.add("white", new Texture(pixmap));
         pixmap.dispose();
 
-        // --- Button style ---
+        // Button style
         TextButton.TextButtonStyle btnStyle = new TextButton.TextButtonStyle();
         btnStyle.up = skin.newDrawable("white", Color.DARK_GRAY);
         btnStyle.down = skin.newDrawable("white", Color.GRAY);
@@ -122,7 +122,7 @@ public class OptionsScene extends Scene {
         btnStyle.fontColor = Color.WHITE;
         skin.add("default", btnStyle);
 
-        // --- Slider style (programmatic, no textures needed) ---
+        //Slider style (programmatic, no textures needed)
         // Knob: small square the user drags
         Pixmap knobPix = new Pixmap(20, 20, Pixmap.Format.RGBA8888);
         knobPix.setColor(Color.WHITE);

@@ -23,9 +23,7 @@ public class MovementManager {
         entityStrategies.remove(entity);
     }
 
-    /**
-     * Updates all registered entities' movements.
-     */
+    // Updates all registered entities' movements.
     public void updateMovements(float deltaTime) {
         for (Map.Entry<Entity, IMovementStrategy> entry : entityStrategies.entrySet()) {
             	Entity entity = entry.getKey();

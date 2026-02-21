@@ -45,33 +45,27 @@ public abstract class Scene implements Screen {
         this.height = height;
     }
     
-    /**
-     * Called when the game is paused.
-     */
+    //Called when the game is paused.
+
     @Override
     public void pause() {
         // Override in subclass if needed
     }
     
-    /**
-     * Called when the game is resumed from a paused state.
-     */
+    // Called when the game is resumed from a paused state.
     @Override
     public void resume() {
         // Override in subclass if needed
     }
     
-    /**
-     * Called when this screen is no longer the current screen.
-     */
+    ///Called when this screen is no longer the current screen.
+
     @Override
     public void hide() {
         // Override in subclass if needed
     }
     
-    /**
-     * Called when this screen should release all resources.
-     */
+    ///Called when this screen should release all resources.
     @Override
     public abstract void dispose();
     

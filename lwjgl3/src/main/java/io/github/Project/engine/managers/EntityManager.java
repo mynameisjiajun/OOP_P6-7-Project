@@ -13,9 +13,7 @@ import java.util.List;
 public class EntityManager {
     private List<Entity> entities;
     
-    /**
-     * Creates a new EntityManager.
-     */
+    //Creates a new EntityManager.
     public EntityManager() {
         this.entities = new ArrayList<>();
     }
@@ -62,9 +60,8 @@ public class EntityManager {
             entity.render(batch, shapeRenderer);
         }
     }
-     /**
-     * Clears all entities.
-     */
+     //Clears all entities.
+
     public void clear() {
         entities.clear();
     }

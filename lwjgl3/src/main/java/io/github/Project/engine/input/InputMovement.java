@@ -6,21 +6,20 @@ import com.badlogic.gdx.InputAdapter;
 
 public class InputMovement extends InputAdapter {
     
-    // --- Keyboard State ---
+    // Keyboard State
     public boolean keyUp;
     public boolean keyDown;
     public boolean keyLeft;
     public boolean keyRight;
 
-    // --- Mouse State ---
+    // Mouse State 
     public boolean mouseLeft;
     public boolean mouseRight;
     public int mouseX;
     public int mouseY;
 
-    /**
-     * Called when a key is pressed down.
-     */
+    // Called when a key is pressed down.
+
     @Override
     public boolean keyDown(int keycode) {
         switch (keycode) {
@@ -44,9 +43,7 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    /**
-     * Called when a key is released.
-     */
+    // Called when a key is released.
     @Override
     public boolean keyUp(int keycode) {
         switch (keycode) {
@@ -70,9 +67,8 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    /**
-     * Called when a mouse button is pressed.
-     */
+    // Called when a mouse button is pressed.
+
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         // Update the coordinates of the click
@@ -90,9 +86,7 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    /**
-     * Called when a mouse button is released.
-     */
+    // Called when a mouse button is released.
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         // Update coordinates (optional, but good for drag release logic)
@@ -121,9 +115,8 @@ public class InputMovement extends InputAdapter {
         return true;
     }
     
-    /**
-     * Updates mouse coordinates while clicking and dragging.
-     */
+    // Updates mouse coordinates while clicking and dragging.
+
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         this.mouseX = screenX;

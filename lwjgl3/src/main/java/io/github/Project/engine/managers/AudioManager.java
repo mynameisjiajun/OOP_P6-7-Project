@@ -6,10 +6,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.ObjectMap;
 import io.github.Project.engine.interfaces.AudioOutput;
 
-/**
- * AudioManager with support for multiple background tracks. Handles sound
- * effects, multiple music tracks, volume, and mute control.
- */
+// Asset paths
 public class AudioManager implements AudioOutput {
 
     public static final String MUSIC_BACKGROUND = "music/backgroundmusic.mp3";
@@ -37,6 +34,7 @@ public class AudioManager implements AudioOutput {
     }
 
     public void loadMusic(String name, String filePath) {
+    	// Clean up old instance if overwriting a music slot
         Music old = musicCache.get(name);
         if (old != null) {
             old.stop();

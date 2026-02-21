@@ -9,12 +9,12 @@ public class IOManager {
     public IOManager() {
         
     }
-     //Reads from assets folder (read-only)
+     // Reads from assets folder (read-only)
     public String readInternalFile(String filePath) {
         FileHandle file = Gdx.files.internal(filePath);
         return file.readString();
     }
-    //Local storage for save files and settings
+    // Local storage for save files and settings
     public void writeLocalFile(String filePath, String content) {
         FileHandle file = Gdx.files.local(filePath);
         file.writeString(content, false);
@@ -29,7 +29,7 @@ public class IOManager {
     }
 
 
-   //check internal assets for existence
+   // Check internal assets for existence
     public boolean internalfileExists(String filePath) {
         return Gdx.files.internal(filePath).exists();
     }

@@ -1,8 +1,6 @@
 package io.github.Project.engine.components;
 
-/**
- * Component that holds texture/sprite information.
- */
+// Component that holds texture/sprite information.
 public class SpriteData {
     public String texturePath;
 

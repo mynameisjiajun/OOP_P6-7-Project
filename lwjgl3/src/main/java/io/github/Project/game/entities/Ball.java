@@ -64,9 +64,7 @@ public class Ball extends CollidableEntity {
         batch.end();
     }
 
-    /**
-     * Dispose of the ball texture.
-     */
+    // Dispose of the ball texture
     public void dispose() {
         if (texture != null) texture.dispose();
     }

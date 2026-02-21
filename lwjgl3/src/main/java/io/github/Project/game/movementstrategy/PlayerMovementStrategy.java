@@ -31,7 +31,7 @@ public class PlayerMovementStrategy implements IMovementStrategy {
 	    entity.setVx(dirX * speed);
 	    entity.setVy(dirY * speed);
 	    
-	    // NEW: Apply screen boundaries
+	    // Apply screen boundaries
 	    float screenWidth = com.badlogic.gdx.Gdx.graphics.getWidth();
 	    float screenHeight = com.badlogic.gdx.Gdx.graphics.getHeight();
 	    

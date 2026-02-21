@@ -25,7 +25,7 @@ public abstract class CollidableEntity extends Entity {
         return bounds;
     }
     
-    //Collision tag accessors
+    //Collision tag assessors
     public String getCollisionTag() {
         return collisionTag;
     }

@@ -19,7 +19,7 @@ public class Player extends CollidableEntity {
     //@param posY Starting Y position
     //@param width Paddle width
     //@param height Paddle height
-    // @param input The InputMovement manager (needed for the strategy)
+    //@param input The InputMovement manager (needed for the strategy)
      
     public Player(float posX, float posY, float width, float height, InputMovement input) {
         // Initialize Parent (CollidableEntity -> Entity)

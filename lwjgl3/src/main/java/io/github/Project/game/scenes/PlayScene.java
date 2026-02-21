@@ -2,7 +2,6 @@ package io.github.Project.game.scenes;
 
 import io.github.Project.engine.scenes.Scene;
 import io.github.Project.engine.main.GameMaster;
-import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.engine.managers.CollisionManager;
 import io.github.Project.game.entities.Player;

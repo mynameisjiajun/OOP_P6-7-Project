@@ -3,34 +3,18 @@ package io.github.Project.engine.managers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
-/**
- * Manages input/output operations.
- * Handles file reading and writing.
- */
+
 public class IOManager {
 
-    /**
-     * Creates a new IOManager.
-     */
     public IOManager() {
         
     }
-
-    /**
-     * Reads a file from the assets directory.
-     * @param filePath The file path relative to assets
-     * @return File contents as String
-     */
+     //Reads from assets folder (read-only)
     public String readInternalFile(String filePath) {
         FileHandle file = Gdx.files.internal(filePath);
         return file.readString();
     }
-
-    /**
-     * Writes data to a local file.
-     * @param filePath The file path relative to local storage
-     * @param content The content to write
-     */
+    //Local storage for save files and settings
     public void writeLocalFile(String filePath, String content) {
         FileHandle file = Gdx.files.local(filePath);
         file.writeString(content, false);
@@ -45,11 +29,7 @@ public class IOManager {
     }
 
 
-    /**
-     * Checks if a file exists in internal storage.
-     * @param filePath The file path
-     * @return true if exists, false otherwise
-     */
+   //check internal assets for existence
     public boolean internalfileExists(String filePath) {
         return Gdx.files.internal(filePath).exists();
     }

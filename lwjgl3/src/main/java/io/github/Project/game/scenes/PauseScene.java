@@ -62,7 +62,8 @@ public class PauseScene extends Scene {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
-                gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
+                // Resume the previous scene without creating a new one
+                gameMaster.getSceneManager().resumePreviousScene();
             }
         });
         
@@ -78,6 +79,13 @@ public class PauseScene extends Scene {
             @Override
             public void clicked(InputEvent event, float x, float y) {
             	gameMaster.getAudioManager().playUIClick();
+            	
+            	// Clean up the previous scene before going to main menu
+            	Scene previousScene = gameMaster.getSceneManager().getPreviousScene();
+            	if (previousScene != null) {
+            	    previousScene.dispose();  // Clean up entities and resources
+            	}
+            	
                 gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
             }
         });
@@ -136,7 +144,8 @@ public class PauseScene extends Scene {
     
     @Override
     public void resume() {
-        gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
+        // Called when app is resumed from background - return to previous scene
+        gameMaster.getSceneManager().resumePreviousScene();
     }
     
     @Override

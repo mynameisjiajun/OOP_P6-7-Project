@@ -75,22 +75,13 @@ public class GameMaster extends Game {
     /**
      * Main game loop - called every frame.
      * LibGDX automatically delegates to the current Screen's render method.
-     * We also update other managers here.
+     * Each scene is responsible for updating its own game logic.
      */
     @Override
     public void render() {
-        float deltaTime = Gdx.graphics.getDeltaTime();
-        
-        // Update game systems (MovementManager already calls entity.update())
-        // DO NOT call entityManager.update() here - that would double-update!
-        movementManager.updateMovements(deltaTime);
-        collisionManager.checkCollisions();
-        
         // LibGDX's Game class automatically calls getScreen().render(delta)
+        // The active scene controls what systems update and render
         super.render();
-        
-        // Render all entities using shared renderers
-        entityManager.render(sharedBatch, sharedShapeRenderer);
     }
     
     /**

@@ -196,18 +196,22 @@ public class PlayScene extends Scene {
         Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
-        // Check for ESC key to pause
+        // Check for ESC key to pause (don't destroy entities, just pause)
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            cleanupEntities();
-            gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
+            gameMaster.getSceneManager().pauseAndSetState(new PauseScene(gameMaster));
             return;
         }
         
+        // Update game systems (only when PlayScene is active)
         gameMaster.getMovementManager().updateMovements(delta);
         gameMaster.getCollisionManager().checkCollisions();
         gameMaster.getEntityManager().update(delta);
         
-        // Entities are rendered by GameMaster via EntityManager.render()
+        // Render all game entities
+        gameMaster.getEntityManager().render(
+            gameMaster.getSharedBatch(),
+            gameMaster.getSharedShapeRenderer()
+        );
         
         // Update and draw UI stage (on top of game)
         stage.act(delta);

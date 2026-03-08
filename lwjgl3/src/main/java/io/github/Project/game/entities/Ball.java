@@ -38,8 +38,8 @@ public class Ball extends CollidableEntity {
 
         // Give the ball a random initial direction
         double angle = Math.random() * 2 * Math.PI;
-        this.vx = (float) Math.cos(angle) * speed;
-        this.vy = (float) Math.sin(angle) * speed;
+        setVx((float) Math.cos(angle) * speed);
+        setVy((float) Math.cos(angle) * speed);
     }
     public void setScreenSize(float width, float height) {
 		this.screenWidth = width;
@@ -53,14 +53,14 @@ public class Ball extends CollidableEntity {
     	}
     
     public void bounceY() {
-		this.vy = -this.vy;
+		setVy(-getVy());
 	}
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         // Draw the ball using the shared SpriteBatch
         batch.begin();
-        batch.draw(texture, posX, posY, bounds.width, bounds.height);
+        batch.draw(texture, getPosX(), getPosY(), bounds.width, bounds.height);
         batch.end();
     }
 

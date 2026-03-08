@@ -4,11 +4,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public abstract class Entity {
-    protected float posX;
-    protected float posY;
-    protected float vx;
-    protected float vy;
-    protected float speed; 
+    private float posX;
+    private float posY;
+    private float vx;
+    private float vy;
+    private float speed; 
     
     
     public Entity(float posX, float posY, float speed) {

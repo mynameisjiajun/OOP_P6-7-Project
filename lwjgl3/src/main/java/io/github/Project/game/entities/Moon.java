@@ -14,6 +14,8 @@ public class Moon extends CollidableEntity {
 		super(x, y, 0, width, height);
 		this.texture = new Texture("moon.jpg");
 		this.size = width;
+		
+		this.collisionTag = "Moon";
 	}
 	@Override
 	public float getWidth() {

@@ -42,4 +42,7 @@ public class healthbar extends Entity {
 	public float getHeight() {
 		return height;
 	}
+	public void dispose() {
+		// No resources to dispose for the health bar
+	}
 }

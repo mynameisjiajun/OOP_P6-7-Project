@@ -15,6 +15,8 @@ public class SpaceStation extends CollidableEntity {
 		this.texture = new Texture("spacestation.jpg");
 		this.width = width;
 		this.height = height;
+		
+		this.collisionTag = "SpaceStation";
 	}
 	
 	public void update(float deltaTime) {

@@ -16,7 +16,8 @@ public class Asteroid extends CollidableEntity {
         this.width = width;
         this.height = height;
         this.texture = new Texture("asteroid.jpg");
-
+        
+        this.collisionTag = "Asteroid";
     }
 
     @Override
@@ -39,4 +40,7 @@ public class Asteroid extends CollidableEntity {
     public float getHeight() {
         return height;
     }
+    public void dispose() {
+		if (texture != null) texture.dispose();
+	}
 }

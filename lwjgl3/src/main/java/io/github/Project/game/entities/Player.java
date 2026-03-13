@@ -42,10 +42,10 @@ public class Player extends CollidableEntity {
         float screenWidth = com.badlogic.gdx.Gdx.graphics.getWidth();
         float screenHeight = com.badlogic.gdx.Gdx.graphics.getHeight();
         
-        boolean atLeftEdge = posX <= 0;
-        boolean atRightEdge = posX + bounds.width >= screenWidth;
-        boolean atTopEdge = posY + bounds.height >= screenHeight;
-        boolean atBottomEdge = posY <= 0;
+        boolean atLeftEdge = getPosX() <= 0;
+        boolean atRightEdge = getPosX() + bounds.width >= screenWidth;
+        boolean atTopEdge = getPosY() + bounds.height >= screenHeight;
+        boolean atBottomEdge = getPosY() <= 0;
         
         if (atLeftEdge || atRightEdge || atTopEdge || atBottomEdge) {
             shapeRenderer.setColor(Color.RED);  // RED when touching boundary!
@@ -53,7 +53,7 @@ public class Player extends CollidableEntity {
             shapeRenderer.setColor(Color.CYAN);  // Normal color
         }
         
-        shapeRenderer.rect(posX, posY, bounds.width, bounds.height);
+        shapeRenderer.rect(getPosX(), getPosY(), bounds.width, bounds.height);
         shapeRenderer.end();
     }
 

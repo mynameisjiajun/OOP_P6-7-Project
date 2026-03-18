@@ -104,7 +104,7 @@ public class PlayScene extends Scene {
                    if (info.entity1 instanceof Ball) {
                        b = (Ball) info.entity1;
                        p = (Player) info.entity2;
-} else {
+                   } else {
                        b = (Ball) info.entity2;
                        p = (Player) info.entity1;
                    }
@@ -211,7 +211,7 @@ public class PlayScene extends Scene {
        for (Entity entity : getSceneEntities()) {
            entity.render(gameMaster.getSharedBatch(), gameMaster.getSharedShapeRenderer());
        }
-// Update and draw UI stage (on top of game)
+       // Update and draw UI stage (on top of game)
        stage.act(delta);
        stage.draw();
    }

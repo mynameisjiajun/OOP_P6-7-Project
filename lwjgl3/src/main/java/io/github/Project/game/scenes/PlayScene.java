@@ -10,7 +10,6 @@ import io.github.Project.game.entities.Ball;
 import io.github.Project.game.movementstrategy.PlayerMovementStrategy;
 import io.github.Project.game.movementstrategy.BounceMovementStrategy;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Color;
@@ -56,7 +55,7 @@ public class PlayScene extends Scene {
         stage = new Stage(new ScreenViewport());
         
         // Create input handler for player movement (WASD / Arrow keys)
-        inputMovement = new InputMovement();
+        inputMovement = gameMaster.getInputMovement();
         
         // Use InputMultiplexer so both UI buttons AND keyboard movement work
         InputMultiplexer multiplexer = new InputMultiplexer();
@@ -97,6 +96,8 @@ public class PlayScene extends Scene {
             public void onCollision(CollisionManager.CollisionInfo info) {
                 // Check if this is a ball-player collision
                 if (info.isBetween("ball", "player")) {
+                    gameMaster.getIoManager().playCollisionEffect();
+
                     Ball b = null;
                     Player p = null;
                     
@@ -192,13 +193,8 @@ public class PlayScene extends Scene {
         // Clear screen
         Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
-        // Check for ESC key to pause
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            setPaused(true);
-            gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
-            return;
-        }
+
+        gameMaster.getIoManager().update();
         
         // FIXED: Only update game logic when NOT paused
         if (!isPaused) {

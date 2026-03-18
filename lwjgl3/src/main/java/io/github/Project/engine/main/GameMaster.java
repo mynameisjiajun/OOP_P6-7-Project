@@ -46,7 +46,7 @@ public class GameMaster extends Game {
     @Override
     public void create() {
         this.entityManager = new EntityManager();
-        this.ioManager = new IOManager();
+        this.ioManager = new IOManager(this);
         this.movementManager = new MovementManager();
         this.audioManager = new AudioManager();
         this.collisionManager = new CollisionManager(audioManager); // FIXED: No EntityManager

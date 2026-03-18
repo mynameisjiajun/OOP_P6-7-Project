@@ -5,14 +5,15 @@ import io.github.Project.engine.entities.CollidableEntity;
 import java.util.ArrayList;
 import java.util.List;
 
+//Manages collision detection between collidable entities.receives entities from GameMaster.
+
 public class CollisionManager {
-    private EntityManager entityManager;
     private AudioManager audioManager;
     private List<CollisionListener> listeners;
     private List<CollisionPair> collidedThisFrame;
 
-// Holds information about collision between entities.
-     
+    // Holds information about collision between entities.
+    
     public static class CollisionInfo {
         public final Entity entity1;
         public final Entity entity2;
@@ -31,13 +32,13 @@ public class CollisionManager {
             this.overlapY = oy;
         }
         
-        //Check collision involves a specific tag
-         
+        //Check if collision involves a specific tag
+        
         public boolean involves(String tag) {
             return tag1.equals(tag) || tag2.equals(tag);
         }
         
-        //Check collision is between two specific tag
+        // Check if collision is between two specific tags
          
         public boolean isBetween(String tagA, String tagB) {
             return (tag1.equals(tagA) && tag2.equals(tagB)) ||
@@ -45,14 +46,14 @@ public class CollisionManager {
         }
     }
 
-    // Listener interface for collision events
+    //Listener interface for collision events
      
     public interface CollisionListener {
         void onCollision(CollisionInfo info);
     }
     
-    // Helper class to track collision pairs and prevent duplicate handling
-     
+    //Helper class to track collision pairs and prevent duplicate handling
+   
     private static class CollisionPair {
         Entity e1, e2;
         
@@ -75,36 +76,36 @@ public class CollisionManager {
         }
     }
 
-    public CollisionManager(EntityManager entityManager, AudioManager audioManager) {
-        this.entityManager = entityManager;
+    
+    public CollisionManager(AudioManager audioManager) {
         this.audioManager = audioManager;
         this.listeners = new ArrayList<>();
         this.collidedThisFrame = new ArrayList<>();
     }
 
-    //Adds a collision listener
-     
+    // Adds a collision listener
+    
     public void addListener(CollisionListener listener) {
         listeners.add(listener);
     }
 
-    //Removes a collision listener
-     
+    // Removes a collision listener
+  
     public void removeListener(CollisionListener listener) {
         listeners.remove(listener);
     }
 
-    //Clears all listeners
-     
+    // Clears all listeners
+    
     public void clearListeners() {
         listeners.clear();
     }
 
-    //Checks all entities for collisions every frame
+    // Checks collisions for provided entities (passed from GameMaster)
+    // @param entities List of entities to check for collisions
     
-    public void checkCollisions() {
+    public void checkCollisions(List<Entity> entities) {
         collidedThisFrame.clear();
-        List<Entity> entities = entityManager.getEntities();
         
         for (int i = 0; i < entities.size(); i++) {
             for (int j = i + 1; j < entities.size(); j++) {
@@ -123,7 +124,7 @@ public class CollisionManager {
         }
     }
 
-    //Enhanced overlap detection with penetration depth calculation
+    // overlap detection with penetration depth calculation
      
     private CollisionInfo checkOverlap(Entity e1, Entity e2) {
         if (!(e1 instanceof CollidableEntity) || !(e2 instanceof CollidableEntity)) {
@@ -159,9 +160,13 @@ public class CollisionManager {
         return null;
     }
 
+    //Handles collision response
+     
     private void handleCollision(CollisionInfo info) {
         // Play collision sound
-        audioManager.playCollisionSound();
+        if (audioManager != null) {
+            audioManager.playCollisionSound();
+        }
 
         // Notify all listeners
         for (CollisionListener listener : listeners) {

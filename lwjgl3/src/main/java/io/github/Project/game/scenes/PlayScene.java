@@ -2,6 +2,7 @@ package io.github.Project.game.scenes;
 
 import io.github.Project.engine.scenes.Scene;
 import io.github.Project.engine.main.GameMaster;
+import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.engine.managers.CollisionManager;
 import io.github.Project.game.entities.Player;
@@ -24,6 +25,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+// Main gameplay scene.
+//Renders player and ball entities
+// Updates only happen when not paused
+ //Entities are scene-scoped
+ 
 public class PlayScene extends Scene {
     private Stage stage;
     private Skin skin;
@@ -43,7 +49,6 @@ public class PlayScene extends Scene {
     
     @Override
     public void show() {
-        
         // Play background music
         gameMaster.getAudioManager().startDefaultBackgroundMusic();
         
@@ -79,21 +84,19 @@ public class PlayScene extends Scene {
             screenW, screenH    // screen bounds for bouncing
         );
         
-        // Register entities with managers
-        gameMaster.getEntityManager().addEntity(player);
-        gameMaster.getEntityManager().addEntity(ball);
+        // FIXED: Use addSceneEntity instead of direct manager calls
+        addSceneEntity(player);
+        addSceneEntity(ball);
+        
         gameMaster.getMovementManager().registerEntity(player, new PlayerMovementStrategy());
         gameMaster.getMovementManager().registerEntity(ball, new BounceMovementStrategy());
-        
         
         // Set up collision listener using CollisionInfo
         collisionListener = new CollisionManager.CollisionListener() {
             @Override
             public void onCollision(CollisionManager.CollisionInfo info) {
-                
                 // Check if this is a ball-player collision
                 if (info.isBetween("ball", "player")) {
-                    
                     Ball b = null;
                     Player p = null;
                     
@@ -107,35 +110,26 @@ public class PlayScene extends Scene {
                     }
                     
                     if (b != null && p != null) {
-                        
                         // Determine bounce direction based on overlap
                         if (info.overlapY < info.overlapX) {
-                        	
                             // Vertical collision (top/bottom of paddle)
                             b.bounceY();
                             
                             // Push ball out of player to prevent sticking
                             if (b.getPosY() < p.getPosY()) {
-                                // Ball hit from below
                                 b.setPosY(p.getPosY() - b.getHeight() - 1);
                             } else {
-                                // Ball hit from above
                                 b.setPosY(p.getPosY() + p.getHeight() + 1);
                             }
                         } else {
-                           
                             // Horizontal collision (sides of paddle)
                             b.setVx(-b.getVx());
                             
                             // Push ball out of player horizontally
                             if (b.getPosX() < p.getPosX()) {
-                                // Ball hit from left
                                 b.setPosX(p.getPosX() - b.getWidth() - 1);
-                                
                             } else {
-                                // Ball hit from right
                                 b.setPosX(p.getPosX() + p.getWidth() + 1);
-                                
                             }
                         }
                     }
@@ -152,7 +146,7 @@ public class PlayScene extends Scene {
         pauseButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                cleanupEntities();
+                setPaused(true);
                 gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
             }
         });
@@ -190,6 +184,9 @@ public class PlayScene extends Scene {
         return skin;
     }
 
+    // Rendering and updates now happen in the scene.
+    //Logic only runs when not paused.
+     
     @Override
     public void render(float delta) {
         // Clear screen
@@ -198,16 +195,29 @@ public class PlayScene extends Scene {
         
         // Check for ESC key to pause
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            cleanupEntities();
+            setPaused(true);
             gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
             return;
         }
         
-        gameMaster.getMovementManager().updateMovements(delta);
-        gameMaster.getCollisionManager().checkCollisions();
-        gameMaster.getEntityManager().update(delta);
+        // FIXED: Only update game logic when NOT paused
+        if (!isPaused) {
+            // Update movement
+            gameMaster.getMovementManager().updateMovements(delta);
+            
+            // FIXED: Pass scene entities to collision manager (no direct manager-to-manager talk)
+            gameMaster.getCollisionManager().checkCollisions(getSceneEntities());
+            
+            // Update entities
+            for (Entity entity : getSceneEntities()) {
+                entity.update(delta);
+            }
+        }
         
-        // Entities are rendered by GameMaster via EntityManager.render()
+        // FIXED: Render entities in the scene (always render, even when paused)
+        for (Entity entity : getSceneEntities()) {
+            entity.render(gameMaster.getSharedBatch(), gameMaster.getSharedShapeRenderer());
+        }
         
         // Update and draw UI stage (on top of game)
         stage.act(delta);
@@ -227,26 +237,17 @@ public class PlayScene extends Scene {
     
     @Override
     public void pause() {
+        super.pause();
         // Called when game is paused
-    }
-    
-    private void cleanupEntities() {
-        if (player != null) {
-            gameMaster.getEntityManager().removeEntity(player);
-            gameMaster.getMovementManager().unregisterEntity(player);
-        }
-        if (ball != null) {
-            gameMaster.getEntityManager().removeEntity(ball);
-            gameMaster.getMovementManager().unregisterEntity(ball);
-        }
-        if (collisionListener != null) {
-            gameMaster.getCollisionManager().removeListener(collisionListener);
-        }
     }
     
     @Override
     public void dispose() {
-        cleanupEntities();
+        // FIXED: Use clearSceneEntities from base Scene class
+        if (collisionListener != null) {
+            gameMaster.getCollisionManager().removeListener(collisionListener);
+        }
+        clearSceneEntities();
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
     }

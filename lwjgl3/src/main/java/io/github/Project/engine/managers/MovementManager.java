@@ -30,7 +30,7 @@ public class MovementManager {
             	IMovementStrategy strategy = entry.getValue();
             // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
             // (The Player/Entity determines its own desired velocity)
-
+            strategy.updateVelocity(entity);
             // B. Physics Phase: Apply Velocity (Velocity -> Position)
             // This is the "Shared Physics" logic that applies to everyone.
             float newX = entity.getPosX() + (entity.getVx() * deltaTime);

@@ -14,53 +14,44 @@ import io.github.Project.engine.managers.AudioManager;
 import io.github.Project.game.scenes.MainMenuScene;
 
 /**
- * GameMaster - Central coordinator for all game systems.
+ * Central coordinator for all game systems.
  * Main entry point that extends LibGDX Game class.
  * Composition pattern: contains all managers and orchestrates them.
+ * 
+ * FIXED: 
+ * - Removed rendering from GameMaster (now in scenes)
+ * - Removed update logic from GameMaster (now in scenes)
+ * - GameMaster only provides shared resources
  */
 public class GameMaster extends Game {
     private EntityManager entityManager;
+    private IOManager ioManager;
     private MovementManager movementManager;
     private CollisionManager collisionManager;
     private SceneManager sceneManager;
     private AudioManager audioManager;
     private InputMovement inputMovement;
-    private IOManager ioManager;
-    
-    // Persistent settings file
-    private static final String SETTINGS_FILE = "settings.txt";
-
 
     // Shared renderers - ONE for the whole game (GPU-efficient)
     private SpriteBatch sharedBatch;
     private ShapeRenderer sharedShapeRenderer;
 
     public GameMaster() {
-        // DO NOT load managers here!
     }
     
     /**
-     * Called when the game is created.
      * Initializes all managers.
+     * FIXED: CollisionManager no longer receives EntityManager
      */
     @Override
     public void create() {
         this.entityManager = new EntityManager();
+        this.ioManager = new IOManager(this);
         this.movementManager = new MovementManager();
         this.audioManager = new AudioManager();
-        this.collisionManager = new CollisionManager(entityManager, audioManager);
+        this.collisionManager = new CollisionManager(audioManager); // FIXED: No EntityManager
         this.inputMovement = new InputMovement();
         Gdx.input.setInputProcessor(this.inputMovement);
-        this.ioManager = new IOManager();
-        
-        // IOManager integration: load persistent data
-        if (ioManager.localFileExists("settings.txt")) {
-            String settings = ioManager.readLocalFile("settings.txt");
-            System.out.println("Loaded settings:\n" + settings);
-        } else {
-            System.out.println("No settings found (first run).");
-            ioManager.writeLocalFile("settings.txt", "volume=1.0\nmuted=false");
-        }
 
         // Create ONE shared renderer for all entities
         this.sharedBatch = new SpriteBatch();
@@ -72,37 +63,25 @@ public class GameMaster extends Game {
         setScreen(new MainMenuScene(this));
     }
     
-    /**
-     * Main game loop - called every frame.
-     * LibGDX automatically delegates to the current Screen's render method.
-     * Each scene is responsible for updating its own game logic.
-     */
+    // Main game loop - called every frame. LibGDX automatically delegates to current Scene's render method.
+// scene updates/renders entities 
+  
     @Override
     public void render() {
         // LibGDX's Game class automatically calls getScreen().render(delta)
-        // The active scene controls what systems update and render
         super.render();
     }
     
-    /**
-     * Called when the game is disposed.
-     * Clean up all resources.
-     */
+    // Called when the game is disposed.
+    // Clean up all resources.
+    
     @Override
     public void dispose() {
-
-        // IOManager integration: save persistent data
-        if (ioManager != null) {
-            ioManager.writeLocalFile(SETTINGS_FILE, "volume=1.0\nmuted=false");
-        }
-
         super.dispose();
-
         if (audioManager != null) audioManager.dispose();
         if (sharedBatch != null) sharedBatch.dispose();
         if (sharedShapeRenderer != null) sharedShapeRenderer.dispose();
     }
-
     
     // Getters for all managers
     public EntityManager getEntityManager() {
@@ -120,9 +99,11 @@ public class GameMaster extends Game {
     public SceneManager getSceneManager() {
         return sceneManager;
     }
+    
     public AudioManager getAudioManager() {
         return audioManager;
     }
+    
     public CollisionManager getCollisionManager() {
         return collisionManager;
     }
@@ -136,7 +117,6 @@ public class GameMaster extends Game {
     }
 
     public InputMovement getInputMovement() {
-    	return inputMovement;
+        return inputMovement;
+    }
 }
-} 
-

@@ -9,10 +9,15 @@ import com.badlogic.gdx.Gdx;
 public class RocketMovementStrategy implements IMovementStrategy {
     
     // --- Configurable Physics Values ---
-    private float thrustPower = 600f;    // How strong the engine is
-    private float rotationSpeed = 180f;  // How fast it turns (degrees per second)
-    private float baseGravity = 350f;    // Gravity strength on the ground
-    private float spaceThreshold = 3000f;// The Y-coordinate where "Outer Space" begins
+	// --- Configurable Physics Values ---
+    private float thrustPower = 500f;    // Buffed from 450f for a stronger liftoff
+    private float rotationSpeed = 180f;  
+    private float baseGravity = 300f;    
+    private float spaceThreshold = 3000f;
+    
+    // --- ADJUSTED: Aerodynamic Drag Values ---
+    private float earthDrag = 0.995f;    // Air resistance (You will actually pierce the atmosphere now!)
+    private float spaceDrag = 0.999f;    // Vacuum drifting
     
     @Override
     public void updateVelocity(Entity entity) {
@@ -23,7 +28,6 @@ public class RocketMovementStrategy implements IMovementStrategy {
         // ---------------------------------------------------------
         // 1. ROTATION LOGIC (Left / Right)
         // ---------------------------------------------------------
-        // (This replaces the update logic you had inside Rocket.java)
         if (input.keyLeft) {
             rocket.setRotation(rocket.getRotation() + (rotationSpeed * deltaTime));
         }
@@ -32,32 +36,34 @@ public class RocketMovementStrategy implements IMovementStrategy {
         }
 
         // ---------------------------------------------------------
-        // 2. VARIABLE GRAVITY LOGIC
+        // 2. VARIABLE GRAVITY & DRAG LOGIC
         // ---------------------------------------------------------
         float currentGravity = 0f;
+        float currentDrag = spaceDrag; // Default to slippery space
         
-        // If we are below the "Space Threshold", apply gravity
+        // If we are inside the atmosphere (below spaceThreshold)
         if (rocket.getPosY() < spaceThreshold) {
-            // Calculate a percentage. 1.0 at the ground, 0.0 at space edge.
-            float gravityFactor = 1.0f - (rocket.getPosY() / spaceThreshold);
-            currentGravity = baseGravity * gravityFactor;
+            float atmosphereFactor = 1.0f - (rocket.getPosY() / spaceThreshold);
+            currentGravity = baseGravity * atmosphereFactor;
+            currentDrag = spaceDrag - ((spaceDrag - earthDrag) * atmosphereFactor);
         }
         
-        // Constantly pull the rocket down based on current gravity
+        // Apply Gravity (Pulls down)
         rocket.setVy(rocket.getVy() - (currentGravity * deltaTime));
+
+        // Apply Drag EQUALLY to X and Y
+        // (The artificial brake has been removed. You will now coast upwards in space!)
+        rocket.setVx(rocket.getVx() * currentDrag);
+        rocket.setVy(rocket.getVy() * currentDrag);
 
         // ---------------------------------------------------------
         // 3. THRUST LOGIC (Up Key)
         // ---------------------------------------------------------
         if (input.keyUp) {
-            // Convert degrees to radians for math functions
             float radians = (float) Math.toRadians(rocket.getRotation());
-            
-            // Calculate X and Y thrust vectors based on which way it's pointing
             float thrustX = (float) Math.cos(radians) * thrustPower * deltaTime;
             float thrustY = (float) Math.sin(radians) * thrustPower * deltaTime;
             
-            // Add thrust to current velocity (creates momentum)
             rocket.setVx(rocket.getVx() + thrustX);
             rocket.setVy(rocket.getVy() + thrustY);
         }
@@ -65,14 +71,13 @@ public class RocketMovementStrategy implements IMovementStrategy {
         // ---------------------------------------------------------
         // 4. THE GROUND (Launchpad collision)
         // ---------------------------------------------------------
-        // Prevent the rocket from falling through the floor before liftoff
         if (rocket.getPosY() <= 0) {
             rocket.setPosY(0);
             if (rocket.getVy() < 0) {
                 rocket.setVy(0); // Stop falling
             }
-            // Apply ground friction so it doesn't slide endlessly on the floor
-            rocket.setVx(rocket.getVx() * 0.95f); 
+            // Ground friction so it doesn't slide like ice on the launchpad
+            rocket.setVx(rocket.getVx() * 0.85f); 
         }
     }
 }

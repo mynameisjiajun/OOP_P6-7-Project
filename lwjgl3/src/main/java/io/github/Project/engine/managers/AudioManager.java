@@ -107,7 +107,7 @@ public class AudioManager implements AudioOutput {
         this.muted = muted;
 
         if (currentMusic != null) {
-            currentMusic.setVolume(muted ? 0f : volume);
+            currentMusic.setVolume(muted ? 0f : volume * 0.5f);
         }
 
         if (rocketLoopSound != null && rocketLoopPlaying) {
@@ -141,7 +141,7 @@ public class AudioManager implements AudioOutput {
             rocketLoopSound = Gdx.audio.newSound(Gdx.files.internal(SFX_ROCKET));
         }
 
-        rocketLoopId = rocketLoopSound.loop(volume);
+        rocketLoopId = rocketLoopSound.loop(volume*6.0f);
         rocketLoopPlaying = true;
     }
 

@@ -215,6 +215,13 @@ public class PlayScene extends Scene {
                 if (fuel < 0) fuel = 0;
                 fuelBar.setFuel(fuel);
             }
+            
+         // Check if player ran out of fuel
+            if (fuel <= 0 && !gameWon) {
+                gameOver = true;
+                gameMaster.getAudioManager().stopRocketLoop(); 
+                // This stops the engine sound since the rocket is now a floating hunk of metal
+            }
 
             if (rocket.getPosY() > highestSpawnedBand - 2000) {
                 spawnAsteroidsUpTo(rocket.getPosY() + 3000);

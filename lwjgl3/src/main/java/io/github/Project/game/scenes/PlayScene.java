@@ -112,7 +112,8 @@ public class PlayScene extends Scene {
             isPaused = false;
             return;
         }
-
+        
+        
         random = new Random();
         float viewW = Gdx.graphics.getWidth();
         float viewH = Gdx.graphics.getHeight();
@@ -177,6 +178,15 @@ public class PlayScene extends Scene {
             drawHUD();
             return;
         }
+        
+     // This tells the list: "Look at every asteroid; if its destroyed flag is true, remove it."
+        asteroids.removeIf(asteroid -> {
+            if (asteroid.isDestroyed()) {
+                asteroid.dispose(); // This calls the dispose() you already have in Asteroid.java
+                return true; 
+            }
+            return false;
+        });
 
         if (!gameWon && !gameOver) {
             gameMaster.getMovementManager().updateMovements(delta);
@@ -402,20 +412,30 @@ public class PlayScene extends Scene {
     private void handleCollision(CollisionManager.CollisionInfo info) {
         if (gameWon || gameOver) return;
 
-        if (info.isBetween("Rocket", "Asteroid") && damageCooldownTimer <= 0) {
-            health -= DAMAGE_PER_HIT;
-            if (health <= 0) {
-                health = 0;
-                gameOver = true;
-                gameMaster.getAudioManager().stopRocketLoop();
+        // 1. Check for Rocket vs Asteroid
+        if (info.isBetween("Rocket", "Asteroid")) {
+            
+            // This identifies which entity in the collision is the asteroid and marks it dead
+            Asteroid asteroid = (Asteroid) (info.tag1.equals("Asteroid") ? info.entity1 : info.entity2);
+            asteroid.setDestroyed(true); 
+            // --------------------------------
+
+            // 2. Handle the Rocket damage (only if cooldown is over)
+            if (damageCooldownTimer <= 0) {
+                health -= DAMAGE_PER_HIT;
+                if (health <= 0) {
+                    health = 0;
+                    gameOver = true;
+                    gameMaster.getAudioManager().stopRocketLoop();
+                }
+                healthBar.setHP(health);
+                damageCooldownTimer = DAMAGE_COOLDOWN;
+                
+                explosionX     = rocket.getPosX() + rocket.getWidth()  / 2f;
+                explosionY     = rocket.getPosY() + rocket.getHeight() / 2f;
+                explosionTimer = EXPLOSION_DURATION;
+                gameMaster.getIoManager().playCollisionEffect();
             }
-            healthBar.setHP(health);
-            damageCooldownTimer = DAMAGE_COOLDOWN;
-            // Trigger explosion flash centred on the rocket
-            explosionX     = rocket.getPosX() + rocket.getWidth()  / 2f;
-            explosionY     = rocket.getPosY() + rocket.getHeight() / 2f;
-            explosionTimer = EXPLOSION_DURATION;
-            gameMaster.getIoManager().playCollisionEffect();
         }
 
         if (info.isBetween("Rocket", "Moon")) {

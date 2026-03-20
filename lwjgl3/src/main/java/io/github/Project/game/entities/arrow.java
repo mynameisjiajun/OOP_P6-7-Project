@@ -18,7 +18,7 @@ import io.github.Project.engine.entities.Entity;
 public class arrow extends Entity {
 
     private final Entity source;
-    private final Entity target;
+    private Entity target;
 
     private final float distanceAboveRocket = 20f;
     private final float arrowHeadSize       = 12f;
@@ -28,6 +28,8 @@ public class arrow extends Entity {
         this.source = source;
         this.target = target;
     }
+
+    public void setTarget(Entity target) { this.target = target; }
 
     @Override
     public void update(float deltaTime) {

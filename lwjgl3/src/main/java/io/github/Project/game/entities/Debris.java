@@ -18,10 +18,9 @@ import io.github.Project.engine.entities.CollidableEntity;
 public class Debris extends CollidableEntity {
 
     private static final String[] METEOR_TEXTURES = {
-        "meteors/Meteor_01.png", "meteors/Meteor_02.png", "meteors/Meteor_03.png",
-        "meteors/Meteor_04.png", "meteors/Meteor_05.png", "meteors/Meteor_06.png",
-        "meteors/Meteor_07.png", "meteors/Meteor_08.png", "meteors/Meteor_09.png",
-        "meteors/Meteor_10.png"
+        "Space Debris/Space Debris 1.png", "Space Debris/Space Debris 2.png",
+        "Space Debris/Space Debris 3.png", "Space Debris/Space Debris 4.png",
+        "Space Debris/Space Debris 5.png", "Space Debris/Space Debris 6.png"
     };
 
     private Texture texture;
@@ -40,17 +39,15 @@ public class Debris extends CollidableEntity {
         int idx = MathUtils.random(METEOR_TEXTURES.length - 1);
         this.texture = new Texture(METEOR_TEXTURES[idx]);
 
-        this.collisionTag = "Asteroid";
+        this.collisionTag = "Debris";
 
         // Random rotation speed in the range [-60°/s, +60°/s]
         this.rotationSpeed = MathUtils.random(-60f, 60f);
-
-        setVx(0);
-        setVy(0);
     }
 
     @Override
     public void update(float deltaTime) {
+        super.update(deltaTime);   // apply vx/vy → position
         rotation += rotationSpeed * deltaTime;
         updateBounds();
     }

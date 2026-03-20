@@ -19,8 +19,9 @@ public class SpaceStation extends CollidableEntity {
 		this.collisionTag = "SpaceStation";
 	}
 	
+	@Override
 	public void update(float deltaTime) {
-		// SpaceStation doesn't move, so no update logic needed
+		updateBounds();
 	}
 	@Override
 	public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {

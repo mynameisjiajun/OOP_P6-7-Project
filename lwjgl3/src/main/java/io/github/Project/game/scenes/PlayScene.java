@@ -19,6 +19,7 @@ import io.github.Project.game.entities.Fuelbar;
 import io.github.Project.game.entities.Moon;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.healthbar;
+import io.github.Project.game.entities.arrow;
 import io.github.Project.game.movementstrategy.RocketMovementStrategy;
 
 import java.util.ArrayList;
@@ -81,6 +82,7 @@ public class PlayScene extends Scene {
     private Fuelbar    fuelBar;
     private BitmapFont font;
     private GlyphLayout glyphLayout;
+    private arrow arrow;
 
     // ── Game state ──
     private float   health = 1f;
@@ -140,7 +142,9 @@ public class PlayScene extends Scene {
         rocket = new Rocket(0, 0, 0, 32, 64, gameMaster.getInputMovement());
         addSceneEntity(rocket);
         gameMaster.getMovementManager().registerEntity(rocket, new RocketMovementStrategy(moon));
-
+        
+        // ── Arrow pointing to moon (created after moon and rocket as it refers to both ──
+        arrow = new arrow (rocket, moon);
         // ── Asteroids ──
         asteroids = new ArrayList<>();
         highestSpawnedBand = SPACE_ZONE_START;
@@ -276,7 +280,13 @@ public class PlayScene extends Scene {
         }
 
         batch.end();
+    	ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
+		sr.setProjectionMatrix(gameCamera.combined);
+		arrow.update(delta);
+		arrow.render(null, sr);
+
     }
+    
 
     // ────────────────────────────────────────────
     //  HUD RENDERING

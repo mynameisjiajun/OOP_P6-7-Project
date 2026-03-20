@@ -125,14 +125,17 @@ public class PlayScene extends Scene {
         spaceTile = new Texture(Gdx.files.internal("tiles/space.png"));
         spaceTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
 
+        // ── Moon ──
+        // MUST be created first so we can give it to the rocket's physics engine
+        moon = new Moon(MOON_X, MOON_Y, MOON_SIZE, MOON_SIZE);
+        addSceneEntity(moon);
+
         // ── Rocket ──
         rocket = new Rocket(0, 0, 0, 32, 64, gameMaster.getInputMovement());
         addSceneEntity(rocket);
-        gameMaster.getMovementManager().registerEntity(rocket, new RocketMovementStrategy());
-
-        // ── Moon ──
-        moon = new Moon(MOON_X, MOON_Y, MOON_SIZE, MOON_SIZE);
-        addSceneEntity(moon);
+        
+        // Pass the moon into the strategy so it can calculate the radial gravity!
+        gameMaster.getMovementManager().registerEntity(rocket, new RocketMovementStrategy(moon));
 
         // ── Asteroids ──
         asteroids = new ArrayList<>();

@@ -112,7 +112,8 @@ public class PlayScene extends Scene {
             isPaused = false;
             return;
         }
-
+        
+        
         random = new Random();
         float viewW = Gdx.graphics.getWidth();
         float viewH = Gdx.graphics.getHeight();
@@ -177,6 +178,15 @@ public class PlayScene extends Scene {
             drawHUD();
             return;
         }
+        
+     // This tells the list: "Look at every asteroid; if its destroyed flag is true, remove it."
+        asteroids.removeIf(asteroid -> {
+            if (asteroid.isDestroyed()) {
+                asteroid.dispose(); // This calls the dispose() you already have in Asteroid.java
+                return true; 
+            }
+            return false;
+        });
 
         if (!gameWon && !gameOver) {
             gameMaster.getMovementManager().updateMovements(delta);
@@ -337,24 +347,30 @@ public class PlayScene extends Scene {
     // ────────────────────────────────────────────
     private void drawTiledBackground(SpriteBatch batch, float camX, float camY,
                                      float halfW, float halfH) {
-        int startTX = MathUtils.floor((camX - halfW) / TILE_SIZE);
+        float left    = camX - halfW;
+        float screenW = halfW * 2f;
+
+        int startTX = MathUtils.floor(left / TILE_SIZE);
         int endTX   = MathUtils.floor((camX + halfW) / TILE_SIZE);
         int startTY = MathUtils.floor((camY - halfH) / TILE_SIZE);
         int endTY   = MathUtils.floor((camY + halfH) / TILE_SIZE);
 
-        for (int tx = startTX; tx <= endTX; tx++) {
-            for (int ty = startTY; ty <= endTY; ty++) {
+        // ── Sky and space tiles (skip the ground band; drawn separately below) ──
+        for (int ty = startTY; ty <= endTY; ty++) {
+            for (int tx = startTX; tx <= endTX; tx++) {
                 float worldX      = tx * TILE_SIZE;
                 float worldY      = ty * TILE_SIZE;
                 float tileCenterY = worldY + TILE_SIZE / 2f;
 
-                if (worldY + TILE_SIZE <= 0 || worldY < 0) {
-                    batch.draw(groundTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
-                } else if (tileCenterY < EARTH_ZONE_END) {
+                // Skip tiles that are fully underground — ground strip handles those
+                if (worldY + TILE_SIZE <= 0) continue;
+
+                if (tileCenterY < EARTH_ZONE_END) {
                     batch.draw(skyTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 } else if (tileCenterY > SPACE_ZONE_START) {
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 } else {
+                    // Atmosphere fade: space underneath, sky fades out on top
                     float t = (tileCenterY - EARTH_ZONE_END)
                             / (SPACE_ZONE_START - EARTH_ZONE_END);
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
@@ -364,6 +380,13 @@ public class PlayScene extends Scene {
                 }
             }
         }
+
+        // ── Ground strip: grass.png drawn full-width, straddling y=0 ──
+        // The asset has sky at the top and underground at the bottom.
+        // Drawing it from y=-TILE_SIZE to y=+TILE_SIZE centres the grass
+        // surface right at world y=0 (the launch pad level).
+        float groundH = TILE_SIZE * 2f;
+        batch.draw(groundTile, left, -TILE_SIZE, screenW, groundH);
     }
 
     // ────────────────────────────────────────────
@@ -389,20 +412,30 @@ public class PlayScene extends Scene {
     private void handleCollision(CollisionManager.CollisionInfo info) {
         if (gameWon || gameOver) return;
 
-        if (info.isBetween("Rocket", "Asteroid") && damageCooldownTimer <= 0) {
-            health -= DAMAGE_PER_HIT;
-            if (health <= 0) {
-                health = 0;
-                gameOver = true;
-                gameMaster.getAudioManager().stopRocketLoop();
+        // 1. Check for Rocket vs Asteroid
+        if (info.isBetween("Rocket", "Asteroid")) {
+            
+            // This identifies which entity in the collision is the asteroid and marks it dead
+            Asteroid asteroid = (Asteroid) (info.tag1.equals("Asteroid") ? info.entity1 : info.entity2);
+            asteroid.setDestroyed(true); 
+            // --------------------------------
+
+            // 2. Handle the Rocket damage (only if cooldown is over)
+            if (damageCooldownTimer <= 0) {
+                health -= DAMAGE_PER_HIT;
+                if (health <= 0) {
+                    health = 0;
+                    gameOver = true;
+                    gameMaster.getAudioManager().stopRocketLoop();
+                }
+                healthBar.setHP(health);
+                damageCooldownTimer = DAMAGE_COOLDOWN;
+                
+                explosionX     = rocket.getPosX() + rocket.getWidth()  / 2f;
+                explosionY     = rocket.getPosY() + rocket.getHeight() / 2f;
+                explosionTimer = EXPLOSION_DURATION;
+                gameMaster.getIoManager().playCollisionEffect();
             }
-            healthBar.setHP(health);
-            damageCooldownTimer = DAMAGE_COOLDOWN;
-            // Trigger explosion flash centred on the rocket
-            explosionX     = rocket.getPosX() + rocket.getWidth()  / 2f;
-            explosionY     = rocket.getPosY() + rocket.getHeight() / 2f;
-            explosionTimer = EXPLOSION_DURATION;
-            gameMaster.getIoManager().playCollisionEffect();
         }
 
         if (info.isBetween("Rocket", "Moon")) {

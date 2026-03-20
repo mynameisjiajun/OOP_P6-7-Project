@@ -21,6 +21,7 @@ public class Asteroid extends CollidableEntity {
     private float height;
     private float rotation = 0f;
     private float rotationSpeed;
+    private boolean destroyed = false;
 
     public Asteroid(float x, float y, float speed, float width, float height) {
         super(x, y, speed, width, height);
@@ -57,4 +58,12 @@ public class Asteroid extends CollidableEntity {
     public void dispose() {
 		if (texture != null) texture.dispose();
 	}
+    
+    public void setDestroyed(boolean destroyed) {
+        this.destroyed = destroyed;
+    }
+
+    public boolean isDestroyed() {
+        return destroyed;
+    }
 }

@@ -35,12 +35,12 @@ public class PlayScene extends Scene {
     private static final int TILE_SIZE = 256;
 
     // ── World horizontal boundary ──
-    private static final float WORLD_HALF_WIDTH = 1200f;   // rocket is clamped to ±1200
+    private static final float WORLD_HALF_WIDTH = 1200f;
 
-    // ── Moon placement (directly above launch pad) ──
+    // ── Moon placement ──
     private static final float MOON_X    = -100f;
     private static final float MOON_Y    = 5000f;
-    private static final float MOON_SIZE = 200f;           // clearly larger than asteroids
+    private static final float MOON_SIZE = 200f;
 
     // ── Gameplay tuning ──
     private static final float DAMAGE_COOLDOWN  = 1.5f;
@@ -48,10 +48,10 @@ public class PlayScene extends Scene {
     private static final float FUEL_DRAIN_RATE  = 0.08f;
 
     // ── Asteroid spawning ──
-    private static final float ASTEROID_BAND_HEIGHT  = 400f;
-    private static final float ASTEROID_FIELD_WIDTH  = 2000f;  // spread across ±1000 units
+    private static final float ASTEROID_BAND_HEIGHT = 400f;
+    private static final float ASTEROID_FIELD_WIDTH = 2000f;
 
-    // ── Background colours (used for glClearColor underneath tiles) ──
+    // ── Background colours ──
     private static final Color COLOR_SKY   = new Color(0.53f, 0.81f, 0.98f, 1f);
     private static final Color COLOR_SPACE = new Color(0.02f, 0.02f, 0.08f, 1f);
 
@@ -64,32 +64,39 @@ public class PlayScene extends Scene {
     private Texture skyTile;
     private Texture spaceTile;
 
+    // ── Explosion flash ──
+    private Texture explosionTex;
+    private float   explosionTimer;
+    private float   explosionX, explosionY;
+    private static final float EXPLOSION_DURATION = 0.35f;
+    private static final float EXPLOSION_SIZE     = 80f;
+
     // ── Game entities ──
-    private Rocket rocket;
-    private Moon moon;
+    private Rocket        rocket;
+    private Moon          moon;
     private List<Asteroid> asteroids;
 
-    // ── HUD (not in EntityManager) ──
-    private healthbar healthBar;
-    private Fuelbar fuelBar;
+    // ── HUD ──
+    private healthbar  healthBar;
+    private Fuelbar    fuelBar;
     private BitmapFont font;
     private GlyphLayout glyphLayout;
 
     // ── Game state ──
-    private float health = 1f;
-    private float fuel   = 1f;
-    private float damageCooldownTimer = 0f;
+    private float   health = 1f;
+    private float   fuel   = 1f;
+    private float   damageCooldownTimer = 0f;
     private boolean gameWon  = false;
     private boolean gameOver = false;
 
     // ── Asteroid spawn tracking ──
-    private float highestSpawnedBand;
+    private float  highestSpawnedBand;
     private Random random;
 
-    // ── Collision listener (stored for cleanup) ──
+    // ── Collision listener ──
     private CollisionManager.CollisionListener collisionListener;
 
-    // ── Reusable colour (avoids per-frame allocation) ──
+    // ── Reusable colour ──
     private final Color tempColor = new Color();
 
     public PlayScene(GameMaster gameMaster) {
@@ -97,11 +104,10 @@ public class PlayScene extends Scene {
     }
 
     // ────────────────────────────────────────────
-    //  SHOW — one-time initialisation
+    //  SHOW
     // ────────────────────────────────────────────
     @Override
     public void show() {
-        // Resuming from pause — just unpause
         if (gameCamera != null) {
             isPaused = false;
             return;
@@ -119,22 +125,19 @@ public class PlayScene extends Scene {
 
         // ── Background tile textures ──
         groundTile = new Texture(Gdx.files.internal("tiles/grass.png"));
-        groundTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        skyTile = new Texture(Gdx.files.internal("tiles/sky.png"));
-        skyTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-        spaceTile = new Texture(Gdx.files.internal("tiles/space.png"));
-        spaceTile.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        skyTile    = new Texture(Gdx.files.internal("tiles/sky.png"));
+        spaceTile  = new Texture(Gdx.files.internal("tiles/space.png"));
 
-        // ── Moon ──
-        // MUST be created first so we can give it to the rocket's physics engine
+        // ── Explosion flash texture ──
+        explosionTex = new Texture(Gdx.files.internal("Explosion_01.png"));
+
+        // ── Moon (created first so strategy can reference it) ──
         moon = new Moon(MOON_X, MOON_Y, MOON_SIZE, MOON_SIZE);
         addSceneEntity(moon);
 
         // ── Rocket ──
         rocket = new Rocket(0, 0, 0, 32, 64, gameMaster.getInputMovement());
         addSceneEntity(rocket);
-        
-        // Pass the moon into the strategy so it can calculate the radial gravity!
         gameMaster.getMovementManager().registerEntity(rocket, new RocketMovementStrategy(moon));
 
         // ── Asteroids ──
@@ -143,22 +146,17 @@ public class PlayScene extends Scene {
         spawnAsteroidsUpTo(MOON_Y + 1000f);
 
         // ── HUD ──
-        healthBar  = new healthbar(10, viewH - 30, 150, 20);
-        fuelBar    = new Fuelbar(10, viewH - 55, 150, 20);
-        font       = new BitmapFont();
+        healthBar   = new healthbar(10, viewH - 30, 150, 20);
+        fuelBar     = new Fuelbar(10, viewH - 55, 150, 20);
+        font        = new BitmapFont();
         glyphLayout = new GlyphLayout();
 
         // ── Collision listener ──
         gameMaster.getCollisionManager().clearListeners();
-        collisionListener = new CollisionManager.CollisionListener() {
-            @Override
-            public void onCollision(CollisionManager.CollisionInfo info) {
-                handleCollision(info);
-            }
-        };
+        collisionListener = info -> handleCollision(info);
         gameMaster.getCollisionManager().addListener(collisionListener);
 
-        // ── Restore keyboard input processor (MainMenuScene overrides it with a Stage) ──
+        // ── Input ──
         Gdx.input.setInputProcessor(gameMaster.getInputMovement());
 
         // ── Music ──
@@ -172,11 +170,10 @@ public class PlayScene extends Scene {
     public void render(float delta) {
         gameMaster.getIoManager().update();
 
-        // io update may have switched scenes (e.g. R/M pressed), nulling gameCamera via hide()
         if (gameCamera == null) return;
 
         if (isPaused) {
-            drawWorld();
+            drawWorld(0);
             drawHUD();
             return;
         }
@@ -184,7 +181,7 @@ public class PlayScene extends Scene {
         if (!gameWon && !gameOver) {
             gameMaster.getMovementManager().updateMovements(delta);
 
-            // ── Horizontal world boundary ──
+            // ── Horizontal boundary ──
             float leftLimit  = -WORLD_HALF_WIDTH;
             float rightLimit =  WORLD_HALF_WIDTH - rocket.getWidth();
             if (rocket.getPosX() < leftLimit) {
@@ -195,14 +192,13 @@ public class PlayScene extends Scene {
                 rocket.setVx(0);
             }
 
-            for (Asteroid a : asteroids) {
-                a.update(delta);
-            }
+            for (Asteroid a : asteroids) a.update(delta);
 
             gameMaster.getCollisionManager().checkCollisions(
                     gameMaster.getEntityManager().getEntities());
 
             if (damageCooldownTimer > 0) damageCooldownTimer -= delta;
+            if (explosionTimer      > 0) explosionTimer      -= delta;
 
             if (gameMaster.getInputMovement().keyUp && fuel > 0) {
                 fuel -= FUEL_DRAIN_RATE * delta;
@@ -215,48 +211,53 @@ public class PlayScene extends Scene {
             }
         }
 
-        drawWorld();
+        drawWorld(delta);
         drawHUD();
     }
 
     // ────────────────────────────────────────────
     //  WORLD RENDERING
     // ────────────────────────────────────────────
-    private void drawWorld() {
-        // Lock camera on rocket centre
+    private void drawWorld(float delta) {
         gameCamera.position.set(
                 rocket.getPosX() + rocket.getWidth()  / 2f,
                 rocket.getPosY() + rocket.getHeight() / 2f,
                 0);
         gameCamera.update();
 
-        float camX    = gameCamera.position.x;
-        float camY    = gameCamera.position.y;
-        float halfW   = gameCamera.viewportWidth  / 2f;
-        float halfH   = gameCamera.viewportHeight / 2f;
-        // ── Clear screen with zone colour ──
+        float camX  = gameCamera.position.x;
+        float camY  = gameCamera.position.y;
+        float halfW = gameCamera.viewportWidth  / 2f;
+        float halfH = gameCamera.viewportHeight / 2f;
+
         getZoneColor(camY, tempColor);
         Gdx.gl.glClearColor(tempColor.r, tempColor.g, tempColor.b, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // ── Draw tiled background ──
         SpriteBatch batch = gameMaster.getSharedBatch();
         batch.setProjectionMatrix(gameCamera.combined);
         batch.begin();
-        drawTiledBackground(batch, camX, camY, halfW, halfH);
-        batch.end();
 
-        // ── Draw entities (rocket, moon, asteroids) ──
-        batch.setProjectionMatrix(gameCamera.combined);
-        batch.begin();
+        drawTiledBackground(batch, camX, camY, halfW, halfH);
+
+        // Entities — blink rocket during invincibility
         for (Entity e : sceneEntities) {
-            // Blink rocket during invincibility frames
             if (e == rocket && damageCooldownTimer > 0
-                    && ((int) (damageCooldownTimer * 10)) % 2 == 0) {
-                continue;
-            }
+                    && ((int) (damageCooldownTimer * 10)) % 2 == 0) continue;
             e.render(batch, null);
         }
+
+        // Explosion flash at collision point
+        if (explosionTimer > 0) {
+            float alpha = explosionTimer / EXPLOSION_DURATION;
+            batch.setColor(1, 1, 1, alpha);
+            batch.draw(explosionTex,
+                    explosionX - EXPLOSION_SIZE / 2f,
+                    explosionY - EXPLOSION_SIZE / 2f,
+                    EXPLOSION_SIZE, EXPLOSION_SIZE);
+            batch.setColor(1, 1, 1, 1);
+        }
+
         batch.end();
     }
 
@@ -269,18 +270,14 @@ public class PlayScene extends Scene {
 
         ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
         sr.setProjectionMatrix(hudCamera.combined);
-
-        // Dark panel behind HUD so text is always readable regardless of bg colour
         sr.begin(ShapeRenderer.ShapeType.Filled);
         sr.setColor(0, 0, 0, 0.45f);
         sr.rect(0, viewH - 100, 210, 100);
         sr.end();
 
-        // Health & fuel bars
         healthBar.render(null, sr);
         fuelBar.render(null, sr);
 
-        // Text
         SpriteBatch batch = gameMaster.getSharedBatch();
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
@@ -290,21 +287,18 @@ public class PlayScene extends Scene {
         font.draw(batch, "HP",   165, viewH - 13);
         font.draw(batch, "FUEL", 165, viewH - 38);
 
-        int altitude    = (int) rocket.getPosY();
+        int   altitude   = (int) rocket.getPosY();
         float distToMoon = MOON_Y - rocket.getPosY();
-        font.draw(batch, "ALT: " + altitude + "m", 10, viewH - 70);
-        if (distToMoon > 0) {
+        font.draw(batch, "ALT: " + altitude + "m",  10, viewH - 70);
+        if (distToMoon > 0)
             font.draw(batch, "MOON: " + (int) distToMoon + "m", 10, viewH - 90);
-        }
 
-        // Direction arrow
         if (!gameWon && distToMoon > 0) {
-            float dx = (MOON_X + MOON_SIZE / 2f) - (rocket.getPosX() + rocket.getWidth() / 2f);
+            float dx  = (MOON_X + MOON_SIZE / 2f) - (rocket.getPosX() + rocket.getWidth() / 2f);
             String dir = Math.abs(dx) < 100 ? "^" : (dx > 0 ? ">>>" : "<<<");
             font.draw(batch, "MOON " + dir, viewW - 120, viewH - 15);
         }
 
-        // Win overlay
         if (gameWon) {
             font.getData().setScale(3f);
             font.setColor(Color.GREEN);
@@ -319,7 +313,6 @@ public class PlayScene extends Scene {
                     (viewW - glyphLayout.width) / 2f, viewH / 2f - 30);
         }
 
-        // Game over overlay
         if (gameOver) {
             font.getData().setScale(3f);
             font.setColor(Color.RED);
@@ -356,19 +349,12 @@ public class PlayScene extends Scene {
                 float tileCenterY = worldY + TILE_SIZE / 2f;
 
                 if (worldY + TILE_SIZE <= 0 || worldY < 0) {
-                    // Ground layer
                     batch.draw(groundTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
-
                 } else if (tileCenterY < EARTH_ZONE_END) {
-                    // Sky zone
                     batch.draw(skyTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
-
                 } else if (tileCenterY > SPACE_ZONE_START) {
-                    // Space zone
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
-
                 } else {
-                    // Atmosphere transition — space base, sky fades out on top
                     float t = (tileCenterY - EARTH_ZONE_END)
                             / (SPACE_ZONE_START - EARTH_ZONE_END);
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
@@ -381,7 +367,7 @@ public class PlayScene extends Scene {
     }
 
     // ────────────────────────────────────────────
-    //  ZONE COLOUR (sky → space, used for glClearColor)
+    //  ZONE COLOUR
     // ────────────────────────────────────────────
     private void getZoneColor(float altitude, Color out) {
         if (altitude <= EARTH_ZONE_END) {
@@ -412,6 +398,10 @@ public class PlayScene extends Scene {
             }
             healthBar.setHP(health);
             damageCooldownTimer = DAMAGE_COOLDOWN;
+            // Trigger explosion flash centred on the rocket
+            explosionX     = rocket.getPosX() + rocket.getWidth()  / 2f;
+            explosionY     = rocket.getPosY() + rocket.getHeight() / 2f;
+            explosionTimer = EXPLOSION_DURATION;
             gameMaster.getIoManager().playCollisionEffect();
         }
 
@@ -460,16 +450,14 @@ public class PlayScene extends Scene {
 
     @Override
     public void hide() {
-        // isPaused is set to true by IOManager BEFORE switching to PauseScene,
-        // so if isPaused == false here, we are being replaced (R / M), not paused.
         if (!isPaused) {
             clearSceneEntities();
             gameMaster.getCollisionManager().clearListeners();
-            if (groundTile != null) { groundTile.dispose(); groundTile = null; }
-            if (skyTile    != null) { skyTile.dispose();    skyTile    = null; }
-            if (spaceTile  != null) { spaceTile.dispose();  spaceTile  = null; }
-            if (font       != null) { font.dispose();       font       = null; }
-            // Null cameras so show() fully re-initialises if this instance is ever reused
+            if (groundTile   != null) { groundTile.dispose();   groundTile   = null; }
+            if (skyTile      != null) { skyTile.dispose();      skyTile      = null; }
+            if (spaceTile    != null) { spaceTile.dispose();    spaceTile    = null; }
+            if (explosionTex != null) { explosionTex.dispose(); explosionTex = null; }
+            if (font         != null) { font.dispose();         font         = null; }
             gameCamera = null;
             hudCamera  = null;
         }
@@ -479,9 +467,10 @@ public class PlayScene extends Scene {
     public void dispose() {
         clearSceneEntities();
         gameMaster.getCollisionManager().clearListeners();
-        if (groundTile != null) groundTile.dispose();
-        if (skyTile    != null) skyTile.dispose();
-        if (spaceTile  != null) spaceTile.dispose();
-        if (font       != null) font.dispose();
+        if (groundTile   != null) groundTile.dispose();
+        if (skyTile      != null) skyTile.dispose();
+        if (spaceTile    != null) spaceTile.dispose();
+        if (explosionTex != null) explosionTex.dispose();
+        if (font         != null) font.dispose();
     }
 }

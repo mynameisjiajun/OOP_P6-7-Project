@@ -15,7 +15,7 @@ import io.github.Project.engine.entities.CollidableEntity;
  *   - MathUtils.random(n-1)       replaces  RNG.nextInt(n)
  *   - MathUtils.random(-60f, 60f) replaces  -60f + RNG.nextFloat() * 120f
  */
-public class Asteroid extends CollidableEntity {
+public class Debris extends CollidableEntity {
 
     private static final String[] METEOR_TEXTURES = {
         "meteors/Meteor_01.png", "meteors/Meteor_02.png", "meteors/Meteor_03.png",
@@ -31,7 +31,7 @@ public class Asteroid extends CollidableEntity {
     private float rotationSpeed;
     private boolean destroyed   = false;
 
-    public Asteroid(float x, float y, float speed, float width, float height) {
+    public Debris(float x, float y, float speed, float width, float height) {
         super(x, y, speed, width, height);
         this.width  = width;
         this.height = height;

@@ -14,7 +14,7 @@ import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.main.GameMaster;
 import io.github.Project.engine.managers.CollisionManager;
 import io.github.Project.engine.scenes.Scene;
-import io.github.Project.game.entities.Asteroid;
+import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.Fuelbar;
 import io.github.Project.game.entities.Moon;
 import io.github.Project.game.entities.Rocket;
@@ -35,13 +35,13 @@ import java.util.List;
  *    etc. are replaced with factory.createRocket(), factory.createMoon(), etc.
  *
  * 2. EntityFactory is a class field (not a local variable) so it is created
- *    once in show() and reused in spawnAsteroidsUpTo() — avoiding a new
- *    factory allocation on every asteroid spawn call.
+ *    once in show() and reused in spawnDebrisUpTo() — avoiding a new
+ *    factory allocation on every debris spawn call.
  *
  * 3. getZoneColor() uses Color.lerp() instead of manually lerping each channel:
  *    out.set(COLOR_SKY).lerp(COLOR_SPACE, t) replaces four separate lines.
  *
- * 4. Asteroid spawning uses MathUtils.random() instead of java.util.Random.
+ * 4. Debris spawning uses MathUtils.random() instead of java.util.Random.
  *    java.util.Random and its import have been removed entirely from this file.
  *
  * 5. drawHUD() wraps the ShapeRenderer calls for healthBar and fuelBar inside
@@ -69,9 +69,9 @@ public class PlayScene extends Scene {
     private static final float DAMAGE_PER_HIT  = 0.15f;
     private static final float FUEL_DRAIN_RATE = 0.08f;
 
-    // ── Asteroid spawning ────────────────────────────────────────────────────
-    private static final float ASTEROID_BAND_HEIGHT = 400f;
-    private static final float ASTEROID_FIELD_WIDTH = 2000f;
+    // ── Debris spawning ────────────────────────────────────────────────────
+    private static final float DEBRIS_BAND_HEIGHT = 400f;
+    private static final float DEBRIS_FIELD_WIDTH = 2000f;
 
     // ── Background colours ───────────────────────────────────────────────────
     private static final Color COLOR_SKY   = new Color(0.53f, 0.81f, 0.98f, 1f);
@@ -94,14 +94,14 @@ public class PlayScene extends Scene {
     private static final float EXPLOSION_SIZE     = 80f;
 
     // ── Entity factory ───────────────────────────────────────────────────────
-    // Stored as a field so show() and spawnAsteroidsUpTo() share the same
+    // Stored as a field so show() and spawnDebrisUpTo() share the same
     // instance — no need to construct a new factory on every spawn call.
     private EntityFactory factory;
 
     // ── Game entities ────────────────────────────────────────────────────────
     private Rocket         rocket;
     private Moon           moon;
-    private List<Asteroid> asteroids;
+    private List<Debris> debris;
     private arrow          directionArrow;
 
     // ── HUD ──────────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ public class PlayScene extends Scene {
     private boolean gameWon             = false;
     private boolean gameOver            = false;
 
-    // ── Asteroid spawn tracking ──────────────────────────────────────────────
+    // ── Debris spawn tracking ──────────────────────────────────────────────
     private float highestSpawnedBand;
 
     // ── Collision listener ───────────────────────────────────────────────────
@@ -157,7 +157,7 @@ public class PlayScene extends Scene {
 
         // ── Entity factory — Pattern 2 (Factory) ─────────────────────────────
         // Created once here and reused throughout the scene lifetime,
-        // including inside spawnAsteroidsUpTo() which is called repeatedly.
+        // including inside spawnDebrisUpTo() which is called repeatedly.
         factory = new EntityFactory(gameMaster.getInputMovement());
 
         // Moon first — RocketMovementStrategy references it
@@ -172,10 +172,10 @@ public class PlayScene extends Scene {
         // Direction arrow (created after both rocket and moon)
         directionArrow = factory.createArrow(rocket, moon);
 
-        // ── Asteroids ─────────────────────────────────────────────────────────
-        asteroids = new ArrayList<>();
+        // ── Debris ─────────────────────────────────────────────────────────
+        debris = new ArrayList<>();
         highestSpawnedBand = SPACE_ZONE_START;
-        spawnAsteroidsUpTo(MOON_Y + 1000f);
+        spawnDebrisUpTo(MOON_Y + 1000f);
 
         // ── HUD ───────────────────────────────────────────────────────────────
         healthBar   = factory.createHealthBar(10, viewH - 30);
@@ -208,10 +208,10 @@ public class PlayScene extends Scene {
             return;
         }
 
-        // Remove destroyed asteroids each frame
-        asteroids.removeIf(asteroid -> {
-            if (asteroid.isDestroyed()) {
-                asteroid.dispose();
+        // Remove destroyed debris each frame
+        debris.removeIf(debris -> {
+            if (debris.isDestroyed()) {
+                debris.dispose();
                 return true;
             }
             return false;
@@ -231,7 +231,7 @@ public class PlayScene extends Scene {
                 rocket.setVx(0);
             }
 
-            for (Asteroid a : asteroids) a.update(delta);
+            for (Debris d : debris) d.update(delta);
 
             gameMaster.getCollisionManager().checkCollisions(
                     gameMaster.getEntityManager().getEntities());
@@ -251,7 +251,7 @@ public class PlayScene extends Scene {
             }
 
             if (rocket.getPosY() > highestSpawnedBand - 2000) {
-                spawnAsteroidsUpTo(rocket.getPosY() + 3000);
+                spawnDebrisUpTo(rocket.getPosY() + 3000);
             }
         }
 
@@ -454,8 +454,8 @@ public class PlayScene extends Scene {
         if (gameWon || gameOver) return;
 
         if (info.isBetween("Rocket", "Asteroid")) {
-            Asteroid asteroid = (Asteroid)(info.tag1.equals("Asteroid") ? info.entity1 : info.entity2);
-            asteroid.setDestroyed(true);
+            Debris debris = (Debris)(info.tag1.equals("Asteroid") ? info.entity1 : info.entity2);
+            debris.setDestroyed(true);
 
             if (damageCooldownTimer <= 0) {
                 health -= DAMAGE_PER_HIT;
@@ -482,10 +482,10 @@ public class PlayScene extends Scene {
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    //  ASTEROID SPAWNING
+    //  Debris SPAWNING
     // ────────────────────────────────────────────────────────────────────────
     /**
-     * Spawns bands of asteroids up to {@code maxY} world units.
+     * Spawns bands of debris up to {@code maxY} world units.
      *
      * Uses the shared {@code factory} field — no new EntityFactory is created
      * here. This method is called repeatedly as the rocket climbs, so reusing
@@ -493,18 +493,18 @@ public class PlayScene extends Scene {
      *
      * Uses MathUtils.random() throughout — java.util.Random is not needed.
      */
-    private void spawnAsteroidsUpTo(float maxY) {
+    private void spawnDebrisUpTo(float maxY) {
         while (highestSpawnedBand < maxY) {
-            int count = 2 + MathUtils.random(2); // 2, 3, or 4 asteroids per band
+            int count = 2 + MathUtils.random(2); // 2, 3, or 4 debris per band
             for (int i = 0; i < count; i++) {
-                float x = MathUtils.random(-ASTEROID_FIELD_WIDTH / 2f,
-                                            ASTEROID_FIELD_WIDTH / 2f);
-                float y = highestSpawnedBand + MathUtils.random(0f, ASTEROID_BAND_HEIGHT);
-                Asteroid asteroid = factory.createAsteroid(x, y);
-                asteroids.add(asteroid);
-                addSceneEntity(asteroid);
+                float x = MathUtils.random(-DEBRIS_FIELD_WIDTH / 2f,
+                                            DEBRIS_FIELD_WIDTH / 2f);
+                float y = highestSpawnedBand + MathUtils.random(0f, DEBRIS_BAND_HEIGHT);
+                Debris newDebris = factory.createDebris(x, y);
+                debris.add(newDebris);
+                addSceneEntity(newDebris);
             }
-            highestSpawnedBand += ASTEROID_BAND_HEIGHT;
+            highestSpawnedBand += DEBRIS_BAND_HEIGHT;
         }
     }
 

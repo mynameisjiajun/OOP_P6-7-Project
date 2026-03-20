@@ -1,7 +1,7 @@
 package io.github.Project.game.factory;
 
 import io.github.Project.engine.input.InputMovement;
-import io.github.Project.game.entities.Asteroid;
+import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.Fuelbar;
 import io.github.Project.game.entities.Moon;
 import io.github.Project.game.entities.Rocket;
@@ -24,7 +24,7 @@ import io.github.Project.game.entities.healthbar;
  *   EntityFactory factory = new EntityFactory(gameMaster.getInputMovement());
  *   Rocket rocket   = factory.createRocket(0, 0, moon);
  *   Moon   moon     = factory.createMoon(-100, 5000);
- *   Asteroid a      = factory.createAsteroid(x, y);
+ *   Debris d      = factory.createDebris(x, y);
  */
 public class EntityFactory {
 
@@ -32,7 +32,7 @@ public class EntityFactory {
     private static final float ROCKET_WIDTH         = 32f;
     private static final float ROCKET_HEIGHT        = 64f;
     private static final float MOON_SIZE            = 200f;
-    private static final float ASTEROID_SIZE        = 50f;
+    private static final float DEBRIS_SIZE        = 50f;
     private static final float SPACE_STATION_WIDTH  = 80f;
     private static final float SPACE_STATION_HEIGHT = 60f;
     private static final float HUD_BAR_WIDTH        = 150f;
@@ -66,11 +66,11 @@ public class EntityFactory {
     }
 
     /**
-     * Creates a single Asteroid at the given world position.
-     * Texture and rotation speed are randomised inside Asteroid itself.
+     * Creates a single Debris at the given world position.
+     * Texture and rotation speed are randomised inside Debris itself.
      */
-    public Asteroid createAsteroid(float x, float y) {
-        return new Asteroid(x, y, 0, ASTEROID_SIZE, ASTEROID_SIZE);
+    public Debris createDebris(float x, float y) {
+        return new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
     }
 
     /**

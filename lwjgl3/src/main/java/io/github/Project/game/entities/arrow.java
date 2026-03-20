@@ -6,12 +6,22 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import io.github.Project.engine.entities.Entity;
 
+/**
+ * Directional arrow that points from a source entity toward a target entity.
+ * Rendered as a two-line arrowhead above the source.
+ *
+ * CHANGE: Removed shapeRenderer.begin() / shapeRenderer.end() from render().
+ * PlayScene opens ShapeRenderer in Line mode before calling arrow.render()
+ * and closes it afterwards. Calling begin() inside the entity when the
+ * renderer is already open throws an IllegalStateException in LibGDX.
+ */
 public class arrow extends Entity {
-    private Entity source;
-    private Entity target;
 
-    private float distanceAboveRocket = 20f;
-    private float arrowHeadSize = 12f;
+    private final Entity source;
+    private final Entity target;
+
+    private final float distanceAboveRocket = 20f;
+    private final float arrowHeadSize       = 12f;
 
     public arrow(Entity source, Entity target) {
         super(source.getPosX(), source.getPosY(), 0);
@@ -21,48 +31,44 @@ public class arrow extends Entity {
 
     @Override
     public void update(float deltaTime) {
-        // Position arrow above the top-center of the rocket
+        // Position the arrow tip above the top-centre of the source entity
         setPosX(source.getPosX() + source.getWidth() / 2f);
         setPosY(source.getPosY() + source.getHeight() + distanceAboveRocket);
     }
 
+    /**
+     * Draws the arrowhead using the scene's already-open ShapeRenderer.
+     * The scene must have called shapeRenderer.begin(ShapeType.Line) before
+     * iterating arrow.render().
+     */
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         if (shapeRenderer == null) return;
 
-        float targetX = target.getPosX() + target.getWidth() / 2f;
+        float targetX = target.getPosX() + target.getWidth()  / 2f;
         float targetY = target.getPosY() + target.getHeight() / 2f;
 
-        float dx = targetX - getPosX();
-        float dy = targetY - getPosY();
-
+        float dx    = targetX - getPosX();
+        float dy    = targetY - getPosY();
         float angle = MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees;
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
 
+        // Left wing of the arrowhead
         shapeRenderer.line(
             getPosX(), getPosY(),
             getPosX() - MathUtils.cosDeg(angle - 25) * arrowHeadSize,
             getPosY() - MathUtils.sinDeg(angle - 25) * arrowHeadSize
         );
 
+        // Right wing of the arrowhead
         shapeRenderer.line(
             getPosX(), getPosY(),
             getPosX() - MathUtils.cosDeg(angle + 25) * arrowHeadSize,
             getPosY() - MathUtils.sinDeg(angle + 25) * arrowHeadSize
         );
-
-        shapeRenderer.end();
     }
 
-    @Override
-    public float getWidth() {
-        return arrowHeadSize;
-    }
-
-    @Override
-    public float getHeight() {
-        return arrowHeadSize;
-    }
+    @Override public float getWidth()  { return arrowHeadSize; }
+    @Override public float getHeight() { return arrowHeadSize; }
 }

@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import io.github.Project.game.ui.UISkinFactory;
 
 import java.util.Random;
 
@@ -57,7 +58,7 @@ public class PauseScene extends Scene {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        skin = createSkin();
+        skin = UISkinFactory.createSpaceSkin(BTN_UP, BTN_OVER, BTN_DOWN);
 
         Label.LabelStyle titleStyle = new Label.LabelStyle();
         titleStyle.font = skin.getFont("default");

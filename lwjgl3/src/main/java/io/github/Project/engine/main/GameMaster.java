@@ -16,14 +16,33 @@ import io.github.Project.game.scenes.MainMenuScene;
 /**
  * Central coordinator for all game systems.
  * Main entry point that extends LibGDX Game class.
- * Composition pattern: contains all managers and orchestrates them.
- * 
- * FIXED: 
- * - Removed rendering from GameMaster (now in scenes)
- * - Removed update logic from GameMaster (now in scenes)
- * - GameMaster only provides shared resources
+ *
+ * PATTERN: Singleton
+ * Only one GameMaster instance should ever exist for the lifetime of the
+ * application — it owns the single SpriteBatch, ShapeRenderer, InputMovement,
+ * and all managers. The private constructor + getInstance() enforce this,
+ * removing the possibility of accidentally constructing a second instance
+ * (which would create duplicate GPU resources and managers).
+ *
+ * Usage:  GameMaster gm = GameMaster.getInstance();
  */
 public class GameMaster extends Game {
+
+    // ── Singleton instance ──────────────────────────────────────────────────
+    private static GameMaster instance;
+
+    /**
+     * Returns the single GameMaster instance.
+     * Creates it on the first call; returns the cached reference thereafter.
+     */
+    public static GameMaster getInstance() {
+        if (instance == null) {
+            instance = new GameMaster();
+        }
+        return instance;
+    }
+
+    // ── Managers ────────────────────────────────────────────────────────────
     private EntityManager entityManager;
     private IOManager ioManager;
     private MovementManager movementManager;
@@ -32,91 +51,68 @@ public class GameMaster extends Game {
     private AudioManager audioManager;
     private InputMovement inputMovement;
 
-    // Shared renderers - ONE for the whole game (GPU-efficient)
+    // Shared renderers — ONE for the whole game (GPU-efficient)
     private SpriteBatch sharedBatch;
     private ShapeRenderer sharedShapeRenderer;
 
-    public GameMaster() {
+    // ── Private constructor — Singleton pattern ──────────────────────────────
+    private GameMaster() {
+        // Intentionally empty: LibGDX calls create() for initialisation
     }
-    
+
     /**
-     * Initializes all managers.
-     * FIXED: CollisionManager no longer receives EntityManager
+     * Initialises all managers and shared resources.
+     * Called once by LibGDX after the OpenGL context is ready.
      */
     @Override
     public void create() {
-        this.entityManager = new EntityManager();
-        this.ioManager = new IOManager(this);
-        this.movementManager = new MovementManager();
-        this.audioManager = new AudioManager();
-        this.collisionManager = new CollisionManager(audioManager); // FIXED: No EntityManager
-        this.inputMovement = new InputMovement();
+        this.entityManager    = new EntityManager();
+        this.ioManager        = new IOManager(this);
+        this.movementManager  = new MovementManager();
+        this.audioManager     = new AudioManager();
+        this.collisionManager = new CollisionManager(audioManager);
+        this.inputMovement    = new InputMovement();
         Gdx.input.setInputProcessor(this.inputMovement);
 
         // Create ONE shared renderer for all entities
-        this.sharedBatch = new SpriteBatch();
+        this.sharedBatch        = new SpriteBatch();
         this.sharedShapeRenderer = new ShapeRenderer();
-        
+
         this.sceneManager = new SceneManager(this);
-        
-        // Initialize with main menu
+
+        // Start on the main menu
         setScreen(new MainMenuScene(this));
     }
-    
-    // Main game loop - called every frame. LibGDX automatically delegates to current Scene's render method.
-// scene updates/renders entities 
-  
+
+    /**
+     * Main game loop — LibGDX automatically delegates to the current
+     * Scene's render() method each frame.
+     */
     @Override
     public void render() {
-        // LibGDX's Game class automatically calls getScreen().render(delta)
         super.render();
     }
-    
-    // Called when the game is disposed.
-    // Clean up all resources.
-    
+
+    /** Releases all shared GPU resources on shutdown. */
     @Override
     public void dispose() {
         super.dispose();
-        if (audioManager != null) audioManager.dispose();
-        if (sharedBatch != null) sharedBatch.dispose();
+        if (audioManager        != null) audioManager.dispose();
+        if (sharedBatch         != null) sharedBatch.dispose();
         if (sharedShapeRenderer != null) sharedShapeRenderer.dispose();
-    }
-    
-    // Getters for all managers
-    public EntityManager getEntityManager() {
-        return entityManager;
-    }
-    
-    public IOManager getIoManager() {
-        return ioManager;
-    }
-    
-    public MovementManager getMovementManager() {
-        return movementManager;
-    }
-    
-    public SceneManager getSceneManager() {
-        return sceneManager;
-    }
-    
-    public AudioManager getAudioManager() {
-        return audioManager;
-    }
-    
-    public CollisionManager getCollisionManager() {
-        return collisionManager;
+        // Reset singleton so the JVM can GC the instance in tests / hot-reload
+        instance = null;
     }
 
-    public SpriteBatch getSharedBatch() {
-        return sharedBatch;
-    }
+    // ── Getters ─────────────────────────────────────────────────────────────
 
-    public ShapeRenderer getSharedShapeRenderer() {
-        return sharedShapeRenderer;
-    }
-
-    public InputMovement getInputMovement() {
-        return inputMovement;
-    }
+    public EntityManager    getEntityManager()      { return entityManager; }
+    public IOManager        getIoManager()          { return ioManager; }
+    public MovementManager  getMovementManager()    { return movementManager; }
+    public SceneManager     getSceneManager()       { return sceneManager; }
+    public AudioManager     getAudioManager()       { return audioManager; }
+    public CollisionManager getCollisionManager()   { return collisionManager; }
+    public SpriteBatch      getSharedBatch()        { return sharedBatch; }
+    public ShapeRenderer    getSharedShapeRenderer(){ return sharedShapeRenderer; }
+    public InputMovement    getInputMovement()      { return inputMovement; }
 }

@@ -2,15 +2,14 @@ package io.github.Project.engine.managers;
 
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.interfaces.IMovementStrategy;
-import java.util.HashMap;
-import java.util.Map;
+import com.badlogic.gdx.utils.ObjectMap;
 
 public class MovementManager { 
     
-    private Map<Entity, IMovementStrategy> entityStrategies; // Map to hold entities and their movement strategies
+	private ObjectMap<Entity, IMovementStrategy> entityStrategies;
 
     public MovementManager() {
-        this.entityStrategies = new HashMap<>();
+    	this.entityStrategies = new ObjectMap<>();
     }
 
     public void registerEntity(Entity entity, IMovementStrategy strategy) {
@@ -25,20 +24,14 @@ public class MovementManager {
 
     // Updates all registered entities' movements.
     public void updateMovements(float deltaTime) {
-        for (Map.Entry<Entity, IMovementStrategy> entry : entityStrategies.entrySet()) {
-            	Entity entity = entry.getKey();
-            	IMovementStrategy strategy = entry.getValue();
+    	for (ObjectMap.Entry<Entity, IMovementStrategy> entry : entityStrategies) {
+    	    Entity entity = entry.key;
+    	    IMovementStrategy strategy = entry.value;
             // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
             // (The Player/Entity determines its own desired velocity)
-            strategy.updateVelocity(entity);
-            // B. Physics Phase: Apply Velocity (Velocity -> Position)
-            // This is the "Shared Physics" logic that applies to everyone.
-            float newX = entity.getPosX() + (entity.getVx() * deltaTime);
-            float newY = entity.getPosY() + (entity.getVy() * deltaTime);
-
-            entity.setPosX(newX);
-            entity.setPosY(newY);
-            strategy.updateVelocity(entity);
+            	strategy.updateVelocity(entity);
+            	entity.setPosX(entity.getPosX() + entity.getVx() * deltaTime);
+            	entity.setPosY(entity.getPosY() + entity.getVy() * deltaTime);
         }
     }
     

@@ -1,34 +1,45 @@
 package io.github.Project.game.scenes;
 
-import io.github.Project.engine.scenes.Scene;
-import io.github.Project.engine.main.GameMaster;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import io.github.Project.engine.main.GameMaster;
+import io.github.Project.engine.scenes.Scene;
+import io.github.Project.game.ui.UISkinFactory;
 
 import java.util.Random;
 
 /**
  * Options/Settings scene — space-themed.
+ *
+ * CHANGES:
+ * 1. Replaced the private createSkin() method (~40 lines including slider code)
+ *    with two factory calls:
+ *      - UISkinFactory.createSpaceSkin() builds the base skin (buttons + font)
+ *      - UISkinFactory.addSliderStyle()  extends it with the slider style
+ *    OptionsScene is the only scene that needs the slider, so the extension
+ *    call is made here rather than in the base skin.
+ *
+ * 2. Removed now-unused imports: BitmapFont, Pixmap, Texture.
+ *
+ * NOTE: generateStars() keeps java.util.Random with a fixed seed (77L).
  */
 public class OptionsScene extends Scene {
 
+    // ── Space colour palette ─────────────────────────────────────────────────
     private static final Color BG_COLOR    = new Color(0.02f, 0.02f, 0.08f, 1f);
     private static final Color BTN_UP      = new Color(0.08f, 0.12f, 0.28f, 1f);
     private static final Color BTN_OVER    = new Color(0.80f, 0.40f, 0.05f, 1f);
@@ -59,18 +70,23 @@ public class OptionsScene extends Scene {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        skin = createSkin();
+        // ── Skin (via factory) ───────────────────────────────────────────────
+        skin = UISkinFactory.createSpaceSkin(BTN_UP, BTN_OVER, BTN_DOWN);
+        // OptionsScene also needs the slider style — extend the base skin
+        UISkinFactory.addSliderStyle(skin, ACCENT);
 
+        // ── Label styles ─────────────────────────────────────────────────────
         Label.LabelStyle titleStyle = new Label.LabelStyle();
-        titleStyle.font = skin.getFont("default");
+        titleStyle.font      = skin.getFont("default");
         titleStyle.fontColor = TITLE_COLOR;
         skin.add("title", titleStyle);
 
         Label.LabelStyle defaultStyle = new Label.LabelStyle();
-        defaultStyle.font = skin.getFont("default");
+        defaultStyle.font      = skin.getFont("default");
         defaultStyle.fontColor = Color.WHITE;
         skin.add("default", defaultStyle);
 
+        // ── Widgets ───────────────────────────────────────────────────────────
         Label titleLabel = new Label("OPTIONS", skin, "title");
         titleLabel.setFontScale(2f);
 
@@ -138,7 +154,7 @@ public class OptionsScene extends Scene {
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
-        if (stage != null) stage.getViewport().update(width, height, true);
+        if (stage    != null) stage.getViewport().update(width, height, true);
         if (uiCamera != null) {
             uiCamera.viewportWidth  = width;
             uiCamera.viewportHeight = height;
@@ -153,53 +169,7 @@ public class OptionsScene extends Scene {
         if (skin  != null) skin.dispose();
     }
 
-    private Skin createSkin() {
-        Skin s = new Skin();
-        BitmapFont font = new BitmapFont();
-        font.getData().setScale(1.1f);
-        s.add("default", font);
-
-        Pixmap px = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        px.setColor(Color.WHITE);
-        px.fill();
-        s.add("white", new Texture(px));
-        px.dispose();
-
-        TextButton.TextButtonStyle btn = new TextButton.TextButtonStyle();
-        btn.up   = s.newDrawable("white", BTN_UP);
-        btn.over = s.newDrawable("white", BTN_OVER);
-        btn.down = s.newDrawable("white", BTN_DOWN);
-        btn.font      = font;
-        btn.fontColor = Color.WHITE;
-        s.add("default", btn);
-
-        // Slider style — orange fill, white knob
-        Pixmap knobPix = new Pixmap(20, 20, Pixmap.Format.RGBA8888);
-        knobPix.setColor(Color.WHITE);
-        knobPix.fill();
-        s.add("knob", new Texture(knobPix));
-        knobPix.dispose();
-
-        Pixmap trackPix = new Pixmap(1, 10, Pixmap.Format.RGBA8888);
-        trackPix.setColor(new Color(0.15f, 0.15f, 0.25f, 1f));
-        trackPix.fill();
-        s.add("track", new Texture(trackPix));
-        trackPix.dispose();
-
-        Pixmap fillPix = new Pixmap(1, 10, Pixmap.Format.RGBA8888);
-        fillPix.setColor(ACCENT);
-        fillPix.fill();
-        s.add("trackFill", new Texture(fillPix));
-        fillPix.dispose();
-
-        Slider.SliderStyle sliderStyle = new Slider.SliderStyle();
-        sliderStyle.background  = s.newDrawable("track");
-        sliderStyle.knob        = s.newDrawable("knob");
-        sliderStyle.knobBefore  = s.newDrawable("trackFill");
-        s.add("default-horizontal", sliderStyle);
-
-        return s;
-    }
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private float[] generateStars(int w, int h, int count) {
         Random rng = new Random(77L);

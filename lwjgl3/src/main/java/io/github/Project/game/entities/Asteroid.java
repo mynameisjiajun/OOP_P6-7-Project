@@ -19,6 +19,8 @@ public class Asteroid extends CollidableEntity {
     private Texture texture;
     private float width;
     private float height;
+    private float rotation = 0f;
+    private float rotationSpeed;
     private boolean destroyed = false;
 
     public Asteroid(float x, float y, float speed, float width, float height) {
@@ -28,17 +30,20 @@ public class Asteroid extends CollidableEntity {
         int idx = RNG.nextInt(METEOR_TEXTURES.length);
         this.texture = new Texture(METEOR_TEXTURES[idx]);
         this.collisionTag = "Asteroid";
-    }
+        this.rotationSpeed = -60f + RNG.nextFloat() *120f;
+        setVx(0);
+        setVy(0);
+     }
 
     @Override
     public void update(float deltaTime) {
-        super.update(deltaTime);
+    	rotation += rotationSpeed * deltaTime;
         updateBounds();
     }
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        batch.draw(texture, getPosX(), getPosY(), width, height);
+        batch.draw(texture, getPosX(), getPosY(), width / 2, height / 2, width, height, 1, 1, rotation, 0, 0, texture.getWidth(), texture.getHeight(), false, false);
     }
 
     @Override

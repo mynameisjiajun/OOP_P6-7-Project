@@ -337,24 +337,30 @@ public class PlayScene extends Scene {
     // ────────────────────────────────────────────
     private void drawTiledBackground(SpriteBatch batch, float camX, float camY,
                                      float halfW, float halfH) {
-        int startTX = MathUtils.floor((camX - halfW) / TILE_SIZE);
+        float left    = camX - halfW;
+        float screenW = halfW * 2f;
+
+        int startTX = MathUtils.floor(left / TILE_SIZE);
         int endTX   = MathUtils.floor((camX + halfW) / TILE_SIZE);
         int startTY = MathUtils.floor((camY - halfH) / TILE_SIZE);
         int endTY   = MathUtils.floor((camY + halfH) / TILE_SIZE);
 
-        for (int tx = startTX; tx <= endTX; tx++) {
-            for (int ty = startTY; ty <= endTY; ty++) {
+        // ── Sky and space tiles (skip the ground band; drawn separately below) ──
+        for (int ty = startTY; ty <= endTY; ty++) {
+            for (int tx = startTX; tx <= endTX; tx++) {
                 float worldX      = tx * TILE_SIZE;
                 float worldY      = ty * TILE_SIZE;
                 float tileCenterY = worldY + TILE_SIZE / 2f;
 
-                if (worldY + TILE_SIZE <= 0 || worldY < 0) {
-                    batch.draw(groundTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
-                } else if (tileCenterY < EARTH_ZONE_END) {
+                // Skip tiles that are fully underground — ground strip handles those
+                if (worldY + TILE_SIZE <= 0) continue;
+
+                if (tileCenterY < EARTH_ZONE_END) {
                     batch.draw(skyTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 } else if (tileCenterY > SPACE_ZONE_START) {
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
                 } else {
+                    // Atmosphere fade: space underneath, sky fades out on top
                     float t = (tileCenterY - EARTH_ZONE_END)
                             / (SPACE_ZONE_START - EARTH_ZONE_END);
                     batch.draw(spaceTile, worldX, worldY, TILE_SIZE, TILE_SIZE);
@@ -364,6 +370,13 @@ public class PlayScene extends Scene {
                 }
             }
         }
+
+        // ── Ground strip: grass.png drawn full-width, straddling y=0 ──
+        // The asset has sky at the top and underground at the bottom.
+        // Drawing it from y=-TILE_SIZE to y=+TILE_SIZE centres the grass
+        // surface right at world y=0 (the launch pad level).
+        float groundH = TILE_SIZE * 2f;
+        batch.draw(groundTile, left, -TILE_SIZE, screenW, groundH);
     }
 
     // ────────────────────────────────────────────

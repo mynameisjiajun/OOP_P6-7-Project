@@ -68,7 +68,7 @@ public class PlayScene extends Scene {
     // ── Gameplay tuning ────────────────────────────────────────────────────
     private static final float DAMAGE_COOLDOWN  = 1.5f;
     private static final float DAMAGE_PER_HIT   = 0.15f;
-    private static final float FUEL_DRAIN_RATE  = 0.08f;
+    private static final float FUEL_DRAIN_RATE  = 0.03f;
 
     // ── Background colours ─────────────────────────────────────────────────
     private static final Color COLOR_SKY   = new Color(0.40f, 0.70f, 0.95f, 1f);

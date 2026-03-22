@@ -14,7 +14,7 @@ import io.github.Project.game.entities.Rocket;
 public class RocketMovementStrategy implements IMovementStrategy {
 
     private static final float THRUST_POWER     = 500f;
-    private static final float ROTATION_SPEED   = 180f;
+    private static final float ROTATION_SPEED   = 100f;
     private static final float BASE_GRAVITY     = 300f;
     private static final float SPACE_THRESHOLD  = 3000f;
     private static final float EARTH_DRAG       = 0.995f;

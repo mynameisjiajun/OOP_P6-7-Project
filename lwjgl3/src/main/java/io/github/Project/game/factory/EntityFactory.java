@@ -3,8 +3,10 @@ package io.github.Project.game.factory;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.Fuelbar;
+import io.github.Project.game.entities.Ground;
 import io.github.Project.game.entities.Moon;
 import io.github.Project.game.entities.Rocket;
+import io.github.Project.game.entities.Satellite;
 import io.github.Project.game.entities.SpaceStation;
 import io.github.Project.game.entities.arrow;
 import io.github.Project.game.entities.healthbar;
@@ -103,4 +105,14 @@ public class EntityFactory {
     public Fuelbar createFuelBar(float x, float y) {
         return new Fuelbar(x, y, HUD_BAR_WIDTH, HUD_BAR_HEIGHT);
     }
+
+	public Satellite createSatellite(float x, float y) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Ground createGround(float x, float y, float width) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

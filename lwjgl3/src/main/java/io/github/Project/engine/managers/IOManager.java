@@ -120,6 +120,9 @@ public class IOManager {
     public void playRefuelEffect()    { gameMaster.getAudioManager().playRefuelSound(); }
     public void playWinEffect()       { gameMaster.getAudioManager().playWinSound(); }
     public void stopRocketEffect()    { gameMaster.getAudioManager().stopRocketLoop(); }
+    public void playGameOverSound() {
+        gameMaster.getAudioManager().playSoundEffect(AudioManager.SFX_WIN);
+    }
 
     // ── File I/O ─────────────────────────────────────────────────────────────
 

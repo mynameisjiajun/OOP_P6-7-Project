@@ -217,5 +217,12 @@ public class AudioManager implements AudioOutput {
         }
         musicCache.clear();
     }
-}
 
+    /**
+     * Checks if the game over sound is currently playing.
+     */
+    public boolean isGameOverSoundPlaying() {
+        // Placeholder logic: Replace with actual sound state tracking if needed.
+        return currentMusic != null && currentMusic.isPlaying();
+    }
+}

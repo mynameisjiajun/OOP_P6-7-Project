@@ -13,15 +13,24 @@ import com.badlogic.gdx.math.MathUtils;
 import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.main.GameMaster;
 import io.github.Project.engine.managers.CollisionManager;
+import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.scenes.Scene;
 import io.github.Project.game.entities.Asteroid;
 import io.github.Project.game.entities.Debris;
+import io.github.Project.game.entities.Satellite;
+import io.github.Project.game.entities.Ground;
 import io.github.Project.game.entities.Fuelbar;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.SpaceStation;
 import io.github.Project.game.entities.healthbar;
 import io.github.Project.game.entities.arrow;
 import io.github.Project.game.movementstrategy.RocketMovementStrategy;
+import io.github.Project.game.collisionstrategies.RocketCollisionStrategy;
+import io.github.Project.game.collisionstrategies.SpaceStationCollisionStrategy;
+import io.github.Project.game.collisionstrategies.SatelliteCollisionStrategy;
+import io.github.Project.game.factory.DamageCalculatorFactory;
+import io.github.Project.game.factory.DebrisFactory;
+import io.github.Project.game.damage.DamageCalculator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +120,10 @@ public class PlayScene extends Scene {
     private SpaceStation spaceStation;
     private List<Asteroid> backgroundRocks;
     private List<Debris> flyingDebris;    // fly toward station (tag = "Debris")
+    
+    // ── Collision strategies ───────────────────────────────────────────────
+    private RocketCollisionStrategy rocketStrategy;
+    private RocketMovementStrategy rocketMovementStrategy;
 
     // ── HUD ────────────────────────────────────────────────────────────────
     private healthbar  healthBar;
@@ -121,14 +134,12 @@ public class PlayScene extends Scene {
     private arrow arrow;
 
     // ── Game state ─────────────────────────────────────────────────────────
-    private float   health        = 1f;
-    private float   stationHealth = 1f;
-    private float   fuel          = 1f;
-    private float   damageCooldownTimer = 0f;
+    private float   damageCooldownTimer = DAMAGE_COOLDOWN;
     private float   debrisSpawnTimer    = DEBRIS_SPAWN_INTERVAL;
     private int     debrisCollected     = 0;
     private boolean gameWon  = false;
     private boolean gameOver = false;
+    private float   fuel     = 100.0f;
 
     // ── Rock spawn tracking ────────────────────────────────────────────────
     private float  highestSpawnedBand;
@@ -149,7 +160,27 @@ public class PlayScene extends Scene {
     // ──────────────────────────────────────────────────────────────────────
     @Override
     public void show() {
-        if (gameCamera != null) { isPaused = false; return; }
+        if (gameCamera != null) { 
+            // Game restart: reset state
+            isPaused = false;
+            gameWon = false;
+            gameOver = false;
+            debrisCollected = 0;
+            fuel = 100.0f;
+            damageCooldownTimer = DAMAGE_COOLDOWN;
+            
+            // Reset the rocket collision strategy grace period
+            if (rocketStrategy != null) {
+                rocketStrategy.resetGracePeriod();
+            }
+            
+            // Reset the movement strategy ground collision trigger
+            if (rocketMovementStrategy != null) {
+                rocketMovementStrategy.resetGroundCollisionTrigger();
+            }
+            
+            return; 
+        }
 
         random = new Random();
         float viewW = Gdx.graphics.getWidth();
@@ -212,12 +243,17 @@ public class PlayScene extends Scene {
         addSceneEntity(spaceStation);
 
         // Rocket
-        rocket = new Rocket(0, 0, 0, 32, 64, gameMaster.getInputMovement());
+        rocket = new Rocket(0, 0, 0, 32, 64, gameMaster.getInputMovement()); // Adjusted to start at ground level
         addSceneEntity(rocket);
-        gameMaster.getMovementManager().registerEntity(rocket, new RocketMovementStrategy());
+        this.rocketMovementStrategy = new RocketMovementStrategy();
+        gameMaster.getMovementManager().registerEntity(rocket, rocketMovementStrategy);
 
         // Arrow — starts pointing at station, updated each frame to nearest debris
         arrow = new arrow(rocket, spaceStation);
+        
+        // Ground landing pad
+        Ground ground = new Ground(-200, -50, 400, 100);
+        addSceneEntity(ground);
 
         // Background rocks (spawn from space zone upward)
         backgroundRocks = new ArrayList<>();
@@ -238,11 +274,95 @@ public class PlayScene extends Scene {
         gameMaster.getCollisionManager().clearListeners();
         collisionListener = this::handleCollision;
         gameMaster.getCollisionManager().addListener(collisionListener);
+     
+ // ══════════════════════════════════════════════════════════════════════════
+ // COLLISION STRATEGY SETUP (Strategy Pattern)
+ // ══════════════════════════════════════════════════════════════════════════
 
-        Gdx.input.setInputProcessor(gameMaster.getInputMovement());
-        gameMaster.getAudioManager().startDefaultBackgroundMusic();
-    }
+ // Get damage calculators
+ DamageCalculator rocketDamageCalc = DamageCalculatorFactory.createForEntity("Rocket");
+ DamageCalculator stationDamageCalc = DamageCalculatorFactory.createForEntity("SpaceStation");
 
+ // ── Rocket collision strategy ──────────────────────────────────────────
+ this.rocketStrategy = new RocketCollisionStrategy(
+     rocket, rocketDamageCalc
+ );
+
+ // Set callbacks for rocket events
+ this.rocketStrategy.setLandingCallback(new RocketCollisionStrategy.LandingCallback() {
+     @Override
+     public void onSafeLanding() {
+         // Update fuel and health bars on safe landing
+         fuelBar.setFuel(rocket.getFuelPercentage());
+         healthBar.setHP(rocket.getHealthPercentage());
+         gameMaster.getIoManager().playWinEffect();
+     }
+     
+     @Override
+     public void onCrashLanding(float speed, float angle) {
+         explosionX = rocket.getPosX() + rocket.getWidth() / 2f;
+         explosionY = rocket.getPosY() + rocket.getHeight() / 2f;
+         explosionTimer = EXPLOSION_DURATION;
+         gameMaster.getIoManager().playCollisionEffect();
+         
+         // Update fuel and health bars on crash
+         fuelBar.setFuel(rocket.getFuelPercentage());
+         healthBar.setHP(rocket.getHealthPercentage());
+         
+         // IMMEDIATE GAME OVER on crash landing
+         gameOver = true;
+         gameMaster.getAudioManager().stopRocketLoop();
+     }
+ });
+
+ this.rocketStrategy.setCollisionCallback(new RocketCollisionStrategy.CollisionCallback() {
+     public void onDamageCollision(String collisionTag, float damageAmount) {
+         healthBar.setHP(rocket.getHealthPercentage());
+         fuelBar.setFuel(rocket.getFuelPercentage());
+         
+         explosionX = rocket.getPosX() + rocket.getWidth() / 2f;
+         explosionY = rocket.getPosY() + rocket.getHeight() / 2f;
+         explosionTimer = EXPLOSION_DURATION;
+         gameMaster.getIoManager().playCollisionEffect();
+         
+         if (!rocket.isAlive()) {
+             gameOver = true;
+             gameMaster.getAudioManager().stopRocketLoop();
+         }
+     }
+ });
+
+ rocket.setCollisionStrategy(rocketStrategy);
+
+ // ── Space Station collision strategy ───────────────────────────────────
+ SpaceStationCollisionStrategy stationStrategy = new SpaceStationCollisionStrategy(
+     spaceStation, stationDamageCalc
+ );
+
+ stationStrategy.setEventCallback(new SpaceStationCollisionStrategy.StationEventCallback() {
+     @Override
+     public void onStationDamaged(float damageAmount, float healthPercentage) {
+         stationHealthBar.setHP(healthPercentage);
+         gameMaster.getIoManager().playCollisionEffect();
+     }
+     
+     @Override
+     public void onStationDestroyed() {
+         gameOver = true;
+         gameMaster.getAudioManager().stopRocketLoop();
+     }
+     
+     @Override
+     public void onRocketDocked() {
+         gameMaster.getIoManager().playWinEffect();
+     }
+ });
+
+ spaceStation.setCollisionStrategy(stationStrategy);
+ 
+ Gdx.input.setInputProcessor(gameMaster.getInputMovement());
+ gameMaster.getAudioManager().startDefaultBackgroundMusic();
+}
     // ──────────────────────────────────────────────────────────────────────
     //  RENDER
     // ──────────────────────────────────────────────────────────────────────
@@ -267,6 +387,11 @@ public class PlayScene extends Scene {
 
         if (!gameWon && !gameOver) {
             gameMaster.getMovementManager().updateMovements(delta);
+            
+            // Update collision strategy grace period
+            if (rocketStrategy != null) {
+                rocketStrategy.update(delta);
+            }
 
             // Horizontal boundary
             float leftLimit  = -WORLD_HALF_WIDTH;
@@ -287,11 +412,12 @@ public class PlayScene extends Scene {
             if (gameMaster.getInputMovement().keyUp && fuel > 0) {
                 fuel -= FUEL_DRAIN_RATE * delta;
                 if (fuel < 0) fuel = 0;
-                fuelBar.setFuel(fuel);
+                fuelBar.setFuel(fuel / 100.0f); // Update fuel bar
             }
             if (fuel <= 0 && !gameWon) {
                 gameOver = true;
                 gameMaster.getAudioManager().stopRocketLoop();
+                gameMaster.getIoManager().playGameOverSound(); // Play game over sound
             }
 
             // Spawn flying debris
@@ -318,6 +444,10 @@ public class PlayScene extends Scene {
                 if (dist < minDist) { minDist = dist; arrowTarget = d; }
             }
             arrow.setTarget(arrowTarget);
+        } else {
+            if (gameOver && !gameMaster.getAudioManager().isGameOverSoundPlaying()) {
+                gameMaster.getIoManager().playGameOverSound(); // Ensure sound plays only once
+            }
         }
 
         drawWorld(delta);
@@ -371,12 +501,15 @@ public class PlayScene extends Scene {
 
         drawBackground(batch, camX, camY, halfW, halfH);
 
-        // Entities (blink rocket during invincibility)
-        for (Entity e : sceneEntities) {
-            if (e == rocket && damageCooldownTimer > 0
-                    && ((int) (damageCooldownTimer * 10)) % 2 == 0) continue;
-            e.render(batch, null);
-        }
+        // Draw ground visuals first
+        drawGroundVisuals(batch);
+
+        // Draw other entities (e.g., background, debris, etc.)
+        for (Asteroid r : backgroundRocks) r.render(batch, null);
+        for (Debris d : flyingDebris)    d.render(batch, null);
+
+        // Draw the rocket last to ensure it is not blocked
+        rocket.render(batch, null);
 
         // Explosion flash
         if (explosionTimer > 0) {
@@ -541,18 +674,43 @@ public class PlayScene extends Scene {
     // ──────────────────────────────────────────────────────────────────────
     private void handleCollision(CollisionManager.CollisionInfo info) {
         if (gameWon || gameOver) return;
+        
+     // ══════════════════════════════════════════════════════════════════════
+        // POLYMORPHIC COLLISION HANDLING (Strategy Pattern)
+        // Delegates to entity-specific strategies
+        // ══════════════════════════════════════════════════════════════════════
+        
+        CollidableEntity e1 = (CollidableEntity) info.entity1;
+        CollidableEntity e2 = (CollidableEntity) info.entity2;
+        
+        // Trigger collision response for entities with strategies
+        if (e1 instanceof Rocket) {
+            ((Rocket) e1).onCollision(e2);
+        } else if (e1 instanceof SpaceStation) {
+            ((SpaceStation) e1).onCollision(e2);
+        } else if (e1 instanceof Satellite) {
+            ((Satellite) e1).onCollision(e2);
+        }
+        
+        if (e2 instanceof Rocket) {
+            ((Rocket) e2).onCollision(e1);
+        } else if (e2 instanceof SpaceStation) {
+            ((SpaceStation) e2).onCollision(e1);
+        } else if (e2 instanceof Satellite) {
+            ((Satellite) e2).onCollision(e1);
+        }
 
         // Rocket hits a background rock → rocket takes damage
         if (info.isBetween("Rocket", "Asteroid")) {
             Asteroid rock = (Asteroid) (info.tag1.equals("Asteroid") ? info.entity1 : info.entity2);
             rock.setDestroyed(true);
             if (damageCooldownTimer <= 0) {
-                health -= DAMAGE_PER_HIT;
-                if (health <= 0) {
-                    health = 0; gameOver = true;
-                    gameMaster.getAudioManager().stopRocketLoop();
-                }
-                healthBar.setHP(health);
+            	rocket.takeDamage(DAMAGE_PER_HIT);
+            	healthBar.setHP(rocket.getHealthPercentage());
+            	if (!rocket.isAlive()) {
+            	    gameOver = true;
+            	    gameMaster.getAudioManager().stopRocketLoop();
+            	}
                 damageCooldownTimer = DAMAGE_COOLDOWN;
                 explosionX = rocket.getPosX() + rocket.getWidth()  / 2f;
                 explosionY = rocket.getPosY() + rocket.getHeight() / 2f;
@@ -581,12 +739,12 @@ public class PlayScene extends Scene {
             Debris debris = (Debris) (info.tag1.equals("Debris") ? info.entity1 : info.entity2);
             if (!debris.isDestroyed()) {
                 debris.setDestroyed(true);
-                stationHealth -= STATION_DAMAGE;
-                if (stationHealth <= 0) {
-                    stationHealth = 0; gameOver = true;
+                spaceStation.takeDamage(STATION_DAMAGE);
+                stationHealthBar.setHP(spaceStation.getHealthPercentage());
+                if (!spaceStation.isAlive()) {
+                    gameOver = true;
                     gameMaster.getAudioManager().stopRocketLoop();
                 }
-                stationHealthBar.setHP(stationHealth);
                 gameMaster.getIoManager().playCollisionEffect();
             }
         }
@@ -627,6 +785,42 @@ public class PlayScene extends Scene {
             }
             highestSpawnedBand += ROCK_BAND_HEIGHT;
         }
+    }
+
+    /**
+     * Sets up collision strategy for a satellite.
+     * This enables debris spawning when the satellite is destroyed.
+     * 
+     * @param satellite the satellite entity
+     */
+    private void setupSatelliteStrategy(Satellite satellite) {
+        // Create damage calculator for satellites
+        DamageCalculator satelliteDamageCalc = DamageCalculatorFactory.createForEntity("Satellite");
+        
+        // Create debris factory for spawning debris clouds
+        DebrisFactory debrisFactory = new DebrisFactory();
+        
+        // Create and configure satellite collision strategy
+        SatelliteCollisionStrategy satelliteStrategy = new SatelliteCollisionStrategy(
+            satellite,
+            satelliteDamageCalc,
+            debrisFactory
+        );
+        
+        // Set callback to add spawned debris to the game world
+        satelliteStrategy.setDebrisSpawnCallback(new SatelliteCollisionStrategy.DebrisSpawnCallback() {
+            @Override
+            public void onDebrisSpawned(List<Debris> debris) {
+                // Add each debris piece to the game
+                for (Debris d : debris) {
+                    flyingDebris.add(d);
+                    addSceneEntity(d);
+                }
+            }
+        });
+        
+        // Set the strategy on the satellite
+        satellite.setCollisionStrategy(satelliteStrategy);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -677,5 +871,10 @@ public class PlayScene extends Scene {
             for (Texture t : cloudTextures) if (t != null) t.dispose();
             cloudTextures = null;
         }
+    }
+
+    private void drawGroundVisuals(SpriteBatch batch) {
+        // Removed redundant ground rendering to avoid duplication
+        // Ground visuals are now handled by the Ground entity itself
     }
 }

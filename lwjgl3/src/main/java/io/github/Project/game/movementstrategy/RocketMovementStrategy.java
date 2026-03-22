@@ -6,6 +6,7 @@ import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.interfaces.IMovementStrategy;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.game.entities.Rocket;
+import io.github.Project.game.entities.Ground;
 
 /**
  * Simulates rocket physics: thrust, Earth gravity, atmospheric drag.
@@ -19,6 +20,9 @@ public class RocketMovementStrategy implements IMovementStrategy {
     private static final float SPACE_THRESHOLD  = 3000f;
     private static final float EARTH_DRAG       = 0.995f;
     private static final float SPACE_DRAG       = 0.999f;
+    
+    // Track if we've already triggered ground collision to avoid multiple triggers
+    private boolean groundCollisionTriggered = false;
 
     @Override
     public void updateVelocity(Entity entity) {
@@ -50,11 +54,35 @@ public class RocketMovementStrategy implements IMovementStrategy {
             rocket.setVy(rocket.getVy() + MathUtils.sinDeg(rocket.getRotation()) * THRUST_POWER * dt);
         }
 
-        // ── Ground clamp ─────────────────────────────────────────────────────
+        // ── Ground collision detection ─────────────────────────────────────
+        // When rocket reaches ground level (y <= 0), trigger ground collision
         if (rocket.getPosY() <= 0) {
+            // Only trigger collision once per landing
+            if (!groundCollisionTriggered && rocket.getCollisionStrategy() != null) {
+                groundCollisionTriggered = true;
+                
+                // Create a dummy ground entity for the collision handler
+                Ground dummyGround = new Ground(0, -50, 400, 100);
+                rocket.getCollisionStrategy().handleCollision(rocket, dummyGround);
+            }
+            
+            // Apply ground clamp
             rocket.setPosY(0);
             if (rocket.getVy() < 0) rocket.setVy(0);
             rocket.setVx(rocket.getVx() * 0.85f); // landing friction
+        } else {
+            // Reset collision trigger when rocket leaves ground
+            if (groundCollisionTriggered && rocket.getPosY() > 10f) {
+                groundCollisionTriggered = false;
+            }
         }
+    }
+    
+    /**
+     * Resets the ground collision trigger. 
+     * Called when game restarts.
+     */
+    public void resetGroundCollisionTrigger() {
+        groundCollisionTriggered = false;
     }
 }

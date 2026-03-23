@@ -25,6 +25,20 @@ public class DebrisFactory {
     
     private static final int SATELLITE_MIN_DEBRIS = 3;
     private static final int SATELLITE_MAX_DEBRIS = 6;  // Satellites create MORE debris
+
+    private Debris.DebrisClass pickSpaceDebrisClass() {
+        float r = MathUtils.random();
+        if (r < 0.45f) return Debris.DebrisClass.SMALL;
+        if (r < 0.85f) return Debris.DebrisClass.MEDIUM;
+        return Debris.DebrisClass.LARGE;
+    }
+
+    private Debris.DebrisClass pickExplosionDebrisClass() {
+        float r = MathUtils.random();
+        if (r < 0.30f) return Debris.DebrisClass.SMALL;
+        if (r < 0.75f) return Debris.DebrisClass.MEDIUM;
+        return Debris.DebrisClass.LARGE;
+    }
     
     public List<Debris> createDebrisCloud(float centerX, float centerY, int count) {
         List<Debris> debrisList = new ArrayList<>();
@@ -39,7 +53,7 @@ public class DebrisFactory {
             float x = centerX + (float) Math.cos(angleRad) * distance;
             float y = centerY + (float) Math.sin(angleRad) * distance;
             
-            Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
+            Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE, pickExplosionDebrisClass());
             
             float velocity = MathUtils.random(MIN_VELOCITY, MAX_VELOCITY);
             debris.setVx((float) Math.cos(angleRad) * velocity);
@@ -58,7 +72,7 @@ public class DebrisFactory {
 
     /** Single debris with faster random velocity (used by satellite explosions). */
     public Debris createSingleDebris(float x, float y) {
-        Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
+        Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE, pickExplosionDebrisClass());
         float velocity = MathUtils.random(MIN_VELOCITY, MAX_VELOCITY);
         float angle    = MathUtils.random(0f, 360f);
         debris.setVx(MathUtils.cosDeg(angle) * velocity);
@@ -73,8 +87,8 @@ public class DebrisFactory {
      * floating rather than flying aggressively.
      */
     public Debris createSpaceDebris(float x, float y) {
-        Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
-        float speed = MathUtils.random(15f, 45f);
+        Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE, pickSpaceDebrisClass());
+        float speed = MathUtils.random(10f, 30f);
         float angle = MathUtils.random(0f, 360f);
         debris.setVx(MathUtils.cosDeg(angle) * speed);
         debris.setVy(MathUtils.sinDeg(angle) * speed);

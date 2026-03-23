@@ -64,7 +64,7 @@ public class IOManager {
         if (pauseJustPressed && currentScene instanceof PlayScene) {
             currentScene.setPaused(true);
             gameMaster.getAudioManager().pauseAllAudio();
-            gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
+            gameMaster.getSceneManager().pauseAndSetState(new PauseScene(gameMaster));
         }
     }
 

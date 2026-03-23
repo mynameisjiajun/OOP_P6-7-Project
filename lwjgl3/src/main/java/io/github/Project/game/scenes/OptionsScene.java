@@ -38,6 +38,10 @@ import java.util.Random;
  * NOTE: generateStars() keeps java.util.Random with a fixed seed (77L).
  */
 public class OptionsScene extends Scene {
+    public enum BackTarget {
+        MAIN_MENU,
+        PAUSE_MENU
+    }
 
     // ── Space colour palette ─────────────────────────────────────────────────
     private static final Color BG_COLOR    = new Color(0.02f, 0.02f, 0.08f, 1f);
@@ -51,9 +55,15 @@ public class OptionsScene extends Scene {
     private Skin               skin;
     private OrthographicCamera uiCamera;
     private float[]            stars;
+    private final BackTarget   backTarget;
 
     public OptionsScene(GameMaster gameMaster) {
+        this(gameMaster, BackTarget.MAIN_MENU);
+    }
+
+    public OptionsScene(GameMaster gameMaster, BackTarget backTarget) {
         super(gameMaster);
+        this.backTarget = backTarget;
     }
 
     @Override
@@ -117,7 +127,11 @@ public class OptionsScene extends Scene {
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
-                gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
+                if (backTarget == BackTarget.PAUSE_MENU) {
+                    gameMaster.getSceneManager().setState(new PauseScene(gameMaster));
+                } else {
+                    gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
+                }
             }
         });
 

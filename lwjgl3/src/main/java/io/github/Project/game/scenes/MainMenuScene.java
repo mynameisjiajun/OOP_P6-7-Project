@@ -102,7 +102,8 @@ public class MainMenuScene extends Scene {
         optionsButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
-                gameMaster.getSceneManager().setState(new OptionsScene(gameMaster));
+                gameMaster.getSceneManager().setState(
+                    new OptionsScene(gameMaster, OptionsScene.BackTarget.MAIN_MENU));
             }
         });
         exitButton.addListener(new ClickListener() {

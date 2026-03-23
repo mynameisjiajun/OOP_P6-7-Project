@@ -56,14 +56,28 @@ public class DebrisFactory {
         return createDebrisCloud(x, y, count);
     }
 
-    // Added a method to create a single debris object
+    /** Single debris with faster random velocity (used by satellite explosions). */
     public Debris createSingleDebris(float x, float y) {
         Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
         float velocity = MathUtils.random(MIN_VELOCITY, MAX_VELOCITY);
+        float angle    = MathUtils.random(0f, 360f);
+        debris.setVx(MathUtils.cosDeg(angle) * velocity);
+        debris.setVy(MathUtils.sinDeg(angle) * velocity);
+        return debris;
+    }
+
+    /**
+     * Creates a single debris piece with slow random drift — used when
+     * populating the space zone at game start / topping up the count.
+     * Speed is intentionally low to mimic real orbital debris slowly
+     * floating rather than flying aggressively.
+     */
+    public Debris createSpaceDebris(float x, float y) {
+        Debris debris = new Debris(x, y, 0, DEBRIS_SIZE, DEBRIS_SIZE);
+        float speed = MathUtils.random(15f, 45f);
         float angle = MathUtils.random(0f, 360f);
-        float angleRad = (float) Math.toRadians(angle);
-        debris.setVx((float) Math.cos(angleRad) * velocity);
-        debris.setVy((float) Math.sin(angleRad) * velocity);
+        debris.setVx(MathUtils.cosDeg(angle) * speed);
+        debris.setVy(MathUtils.sinDeg(angle) * speed);
         return debris;
     }
 }

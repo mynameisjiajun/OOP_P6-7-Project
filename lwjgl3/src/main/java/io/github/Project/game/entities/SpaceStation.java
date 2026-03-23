@@ -38,7 +38,7 @@ public class SpaceStation extends CollidableEntity {
      */
     public SpaceStation(float x, float y, float width, float height, float maxHealth) {
         super(x, y, 0, width, height);
-        this.texture = new Texture("Space station.png");
+        this.texture = new Texture("New space assets/Space_Station.png");
         this.width = width;
         this.height = height;
         this.health = new HealthComponent(maxHealth);
@@ -80,6 +80,11 @@ public class SpaceStation extends CollidableEntity {
      */
     public void heal(float amount) {
         health.heal(amount);
+    }
+
+    /** Fully restores station health — called on game restart. */
+    public void fullyHeal() {
+        health.fullyHeal();
     }
     
     /**

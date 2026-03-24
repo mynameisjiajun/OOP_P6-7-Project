@@ -82,12 +82,14 @@ public class PlayScene extends Scene {
     private static final int   MAX_BOWL_CAPACITY   = 4;
     private static final int   WIN_CLEAR_SCORE     = 10;
     private static final float DEBRIS_SPAWN_INTERVAL = 10f;
-    private static final float STATION_DAMAGE      = 0.35f;
+    private static final float STATION_DAMAGE      = 1.0f;
     private static final float HOT_DEBRIS_SPEED    = 30f;
     private static final float STATION_WARN_RADIUS = 600f;
     private static final float DEBRIS_SPAWN_MIN_Y_OFFSET = 700f;
     private static final float DEBRIS_SPAWN_MAX_Y_OFFSET = 3700f;
     private static final float DEBRIS_MIN_STATION_SPAWN_DISTANCE = 450f;
+    private static final float GAME_DURATION        = 180f; // 3 minute round
+    private static final int   KESSLER_DEBRIS_LIMIT = 15;   // debris threshold for Kessler
 
     // ── Atmosphere burn effect ─────────────────────────────────────────
     private static final float ATMOSPHERE_BURN_DURATION = 0.6f;
@@ -199,6 +201,7 @@ public class PlayScene extends Scene {
     // ── Game state ─────────────────────────────────────────────────────
     private float   damageCooldownTimer = DAMAGE_COOLDOWN;
     private float   debrisSpawnTimer    = DEBRIS_SPAWN_INTERVAL;
+    private float 	timeRemaining 		= GAME_DURATION;
     private int     debrisCollected     = 0;
     private boolean gameWon             = false;
     private boolean gameOver            = false;
@@ -225,6 +228,7 @@ public class PlayScene extends Scene {
         // Pause / resume — just un-pause, keep all state intact
         if (gameCamera != null) {
             isPaused = false;
+            Gdx.input.setInputProcessor(gameMaster.getInputMovement());
             return;
         }
 
@@ -490,7 +494,19 @@ public class PlayScene extends Scene {
             stationWarningPulse = stationWarningActive
                 ? stationWarningPulse + delta * 6f
                 : 0f;
-
+            
+            
+            timeRemaining -= delta;
+            if (timeRemaining <= 0f && !gameWon && !gameOver) {
+                int totalDebris = flyingDebris.size + attachedDebris.size;
+                if (totalDebris >= KESSLER_DEBRIS_LIMIT) {
+                    gameOver = true;
+                    gameMaster.getAudioManager().stopRocketLoop();
+                    gameMaster.getIoManager().playGameOverSound();
+                    // optionally show a specific Kessler message
+                }
+                timeRemaining = 0f;
+            }
             // ── Attached debris — follow rocket nose ───────────────────
             float rCX = rocket.getPosX() + rocket.getWidth()  / 2f;
             float rCY = rocket.getPosY() + rocket.getHeight() / 2f;
@@ -798,6 +814,7 @@ public class PlayScene extends Scene {
         // Station label
         font.getData().setScale(0.75f);
         String stLabel = stationWarningActive ? "!! SPACE STATION UNDER THREAT !!" : "SPACE STATION HEALTH";
+        font.draw(batch, "TIME: " + (int) timeRemaining + "s", 10f, vH - 95f);
         if (stationWarningActive) font.setColor(1f, 0.35f, 0f, 1f); else font.setColor(Color.WHITE);
         glyphLayout.setText(font, stLabel);
         font.draw(batch, stLabel, (vW - glyphLayout.width) / 2f, vH - 31f);

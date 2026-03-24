@@ -87,7 +87,7 @@ public class MainMenuScene extends Scene {
         Label titleLabel = new Label("ROCKET JOURNEY", skin, "title");
         titleLabel.setFontScale(2.5f);
 
-        Label subLabel = new Label("reach the moon", skin);
+        Label subLabel = new Label("Protect the Space Station!", skin);
 
         TextButton playButton    = new TextButton("LAUNCH",  skin);
         TextButton optionsButton = new TextButton("OPTIONS", skin);

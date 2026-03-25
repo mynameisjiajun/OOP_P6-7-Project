@@ -29,7 +29,10 @@ public class MovementManager {
     	    IMovementStrategy strategy = entry.value;
             // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
             // (The Player/Entity determines its own desired velocity)
-            	strategy.updateVelocity(entity);
+            strategy.updateVelocity(entity);
+            
+            // B. Apply Phase: Update Position (Velocity -> Position)
+            entity.update(deltaTime);
         }
     }
     

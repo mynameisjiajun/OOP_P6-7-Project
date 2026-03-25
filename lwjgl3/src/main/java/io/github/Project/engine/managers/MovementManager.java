@@ -6,7 +6,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 
 public class MovementManager { 
     
-	private ObjectMap<Entity, IMovementStrategy> entityStrategies;
+	private final ObjectMap<Entity, IMovementStrategy> entityStrategies;
 
     public MovementManager() {
     	this.entityStrategies = new ObjectMap<>();
@@ -30,8 +30,6 @@ public class MovementManager {
             // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
             // (The Player/Entity determines its own desired velocity)
             	strategy.updateVelocity(entity);
-            	entity.setPosX(entity.getPosX() + entity.getVx() * deltaTime);
-            	entity.setPosY(entity.getPosY() + entity.getVy() * deltaTime);
         }
     }
     

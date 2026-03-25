@@ -20,7 +20,7 @@ public class EarthStation extends CollidableEntity {
 
     public EarthStation(float x, float y, float width, float height) {
         super(x, y, 0, width, height);
-        this.texture = new Texture("Ground Assets/Earth_Station.png");
+        this.texture = new Texture("images/ground/Earth_Station.png");
         this.width   = width;
         this.height  = height;
         this.collisionTag = "EarthStation";

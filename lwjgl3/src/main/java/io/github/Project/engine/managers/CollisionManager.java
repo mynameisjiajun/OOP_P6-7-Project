@@ -8,9 +8,9 @@ import java.util.List;
 // Manages collision detection between collidable entities
 
 public class CollisionManager {
-    private AudioManager audioManager;
-    private List<CollisionListener> listeners;
-    private List<CollisionPair> collidedThisFrame;
+    private final AudioManager audioManager;
+    private final List<CollisionListener> listeners;
+    private final List<CollisionPair> collidedThisFrame;
 
     // Holds information about collision between entities
     public static class CollisionInfo {
@@ -41,6 +41,7 @@ public class CollisionManager {
         }
     }
 
+    @FunctionalInterface
     public interface CollisionListener {
         void onCollision(CollisionInfo info);
     }

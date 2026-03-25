@@ -9,16 +9,16 @@ import io.github.Project.engine.interfaces.AudioOutput;
 public class AudioManager implements AudioOutput {
 
     // music file paths
-    public static final String MUSIC_BACKGROUND = "music/backgroundmusic.mp3";
-    public static final String MUSIC_GAMEPLAY = "music/gameplay.mp3";
-    public static final String MUSIC_MENU = "music/menu.mp3";
+    public static final String MUSIC_BACKGROUND = "audio/music/backgroundmusic.mp3";
+    public static final String MUSIC_GAMEPLAY = "audio/music/gameplay.mp3";
+    public static final String MUSIC_MENU = "audio/music/menu.mp3";
 
     // sound effect file paths
-    public static final String SFX_UI_CLICK = "sounds/uiclick.wav";
-    public static final String SFX_COLLISION = "sounds/collisionsound.wav";
-    public static final String SFX_ROCKET = "sounds/rocket.wav";
-    public static final String SFX_REFUEL = "sounds/refuel.wav";
-    public static final String SFX_WIN = "sounds/win.wav";
+    public static final String SFX_UI_CLICK = "audio/sfx/uiclick.wav";
+    public static final String SFX_COLLISION = "audio/sfx/collisionsound.wav";
+    public static final String SFX_ROCKET = "audio/sfx/rocket.wav";
+    public static final String SFX_REFUEL = "audio/sfx/refuel.wav";
+    public static final String SFX_WIN = "audio/sfx/win.wav";
 
     private final ObjectMap<String, Sound> soundCache = new ObjectMap<>();
     private final ObjectMap<String, Music> musicCache = new ObjectMap<>();
@@ -26,6 +26,9 @@ public class AudioManager implements AudioOutput {
     private Music currentMusic;
     private float volume = 1.0f;
     private boolean muted = false;
+
+    /** Rocket loop is louder than other SFX to cut through the music. */
+    private static final float ROCKET_LOOP_VOLUME_MULTIPLIER = 6.0f;
 
     // used for looping rocket sound
     private Sound rocketLoopSound;
@@ -107,7 +110,7 @@ public class AudioManager implements AudioOutput {
         this.muted = muted;
 
         if (currentMusic != null) {
-            currentMusic.setVolume(muted ? 0f : volume * 0.5f);
+            currentMusic.setVolume(muted ? 0f : volume);
         }
 
         if (rocketLoopSound != null && rocketLoopPlaying) {
@@ -141,7 +144,7 @@ public class AudioManager implements AudioOutput {
             rocketLoopSound = Gdx.audio.newSound(Gdx.files.internal(SFX_ROCKET));
         }
 
-        rocketLoopId = rocketLoopSound.loop(volume*6.0f);
+        rocketLoopId = rocketLoopSound.loop(volume * ROCKET_LOOP_VOLUME_MULTIPLIER);
         rocketLoopPlaying = true;
     }
 
@@ -222,7 +225,7 @@ public class AudioManager implements AudioOutput {
      * Checks if the game over sound is currently playing.
      */
     public boolean isGameOverSoundPlaying() {
-        // Placeholder logic: Replace with actual sound state tracking if needed.
-        return currentMusic != null && currentMusic.isPlaying();
+        // Placeholder logic: Since there is no game-over sound tracked yet, safely return false.
+        return false;
     }
 }

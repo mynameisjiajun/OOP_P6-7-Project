@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import io.github.Project.engine.main.GameMaster;
+import io.github.Project.engine.core.GameMaster;
 import io.github.Project.game.ui.UISkinFactory;
 
 /**
@@ -56,8 +56,7 @@ public class OptionsScene extends StarBackgroundScene {
             }
         });
 
-        final boolean isMuted = gameMaster.getAudioManager().isMuted();
-        final TextButton muteButton = new TextButton(isMuted ? "UNMUTE" : "MUTE", skin);
+        final TextButton muteButton = new TextButton(gameMaster.getAudioManager().isMuted() ? "UNMUTE" : "MUTE", skin);
         muteButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 boolean nowMuted = !gameMaster.getAudioManager().isMuted();

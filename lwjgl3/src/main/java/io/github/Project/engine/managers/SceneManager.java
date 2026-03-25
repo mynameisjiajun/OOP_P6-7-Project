@@ -1,7 +1,7 @@
 package io.github.Project.engine.managers;
 
-import io.github.Project.engine.main.GameMaster;
-import io.github.Project.engine.scenes.Scene;
+import io.github.Project.engine.core.GameMaster;
+import io.github.Project.engine.core.Scene;
 
 /**
  * Manages game scenes/screens using LibGDX's built-in screen system.
@@ -9,7 +9,7 @@ import io.github.Project.engine.scenes.Scene;
  * Tracks previous scene to allow resuming without losing state.
  */
 public class SceneManager {
-    private GameMaster gameMaster;
+    private final GameMaster gameMaster;
     private Scene previousScene;  // Track scene before pause/menu
     
     /**

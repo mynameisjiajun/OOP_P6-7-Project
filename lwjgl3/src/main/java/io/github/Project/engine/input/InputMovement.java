@@ -5,18 +5,44 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 
 public class InputMovement extends InputAdapter {
-    
-    // Keyboard State
-    public boolean keyUp;
-    public boolean keyDown;
-    public boolean keyLeft;
-    public boolean keyRight;
 
-    // Mouse State 
-    public boolean mouseLeft;
-    public boolean mouseRight;
-    public int mouseX;
-    public int mouseY;
+    // Keyboard State
+    private boolean keyUp;
+    private boolean keyDown;
+    private boolean keyLeft;
+    private boolean keyRight;
+
+    // Mouse State
+    private boolean mouseLeft;
+    private boolean mouseRight;
+    private int mouseX;
+    private int mouseY;
+
+    // ── Getters ──────────────────────────────────────────────────────────
+
+    /** @return true while the thrust/up key is held */
+    public boolean isKeyUp()      { return keyUp; }
+
+    /** @return true while the brake/down key is held */
+    public boolean isKeyDown()    { return keyDown; }
+
+    /** @return true while the rotate-left key is held */
+    public boolean isKeyLeft()    { return keyLeft; }
+
+    /** @return true while the rotate-right key is held */
+    public boolean isKeyRight()   { return keyRight; }
+
+    /** @return true while the primary mouse button is held */
+    public boolean isMouseLeft()  { return mouseLeft; }
+
+    /** @return true while the secondary mouse button is held */
+    public boolean isMouseRight() { return mouseRight; }
+
+    /** @return current mouse X in screen coordinates */
+    public int getMouseX()        { return mouseX; }
+
+    /** @return current mouse Y in screen coordinates */
+    public int getMouseY()        { return mouseY; }
 
     // Called when a key is pressed down.
 
@@ -24,21 +50,14 @@ public class InputMovement extends InputAdapter {
     public boolean keyDown(int keycode) {
         switch (keycode) {
             case Keys.W:
-            case Keys.UP:
-                keyUp = true;
-                break;
+            case Keys.UP:    keyUp    = true; break;
             case Keys.A:
-            case Keys.LEFT:
-                keyLeft = true;
-                break;
+            case Keys.LEFT:  keyLeft  = true; break;
             case Keys.S:
-            case Keys.DOWN:
-                keyDown = true;
-                break;
+            case Keys.DOWN:  keyDown  = true; break;
             case Keys.D:
-            case Keys.RIGHT:
-                keyRight = true;
-                break;
+            case Keys.RIGHT: keyRight = true; break;
+            default:         break;
         }
         return true;
     }
@@ -48,21 +67,14 @@ public class InputMovement extends InputAdapter {
     public boolean keyUp(int keycode) {
         switch (keycode) {
             case Keys.W:
-            case Keys.UP:
-                keyUp = false;
-                break;
+            case Keys.UP:    keyUp    = false; break;
             case Keys.A:
-            case Keys.LEFT:
-                keyLeft = false;
-                break;
+            case Keys.LEFT:  keyLeft  = false; break;
             case Keys.S:
-            case Keys.DOWN:
-                keyDown = false;
-                break;
+            case Keys.DOWN:  keyDown  = false; break;
             case Keys.D:
-            case Keys.RIGHT:
-                keyRight = false;
-                break;
+            case Keys.RIGHT: keyRight = false; break;
+            default:         break;
         }
         return true;
     }
@@ -75,14 +87,8 @@ public class InputMovement extends InputAdapter {
         this.mouseX = screenX;
         this.mouseY = screenY;
 
-        switch (button) {
-            case Input.Buttons.LEFT:
-                mouseLeft = true;
-                break;
-            case Input.Buttons.RIGHT:
-                mouseRight = true;
-                break;
-        }
+        if      (button == Input.Buttons.LEFT)  mouseLeft  = true;
+        else if (button == Input.Buttons.RIGHT) mouseRight = true;
         return true;
     }
 
@@ -93,14 +99,8 @@ public class InputMovement extends InputAdapter {
         this.mouseX = screenX;
         this.mouseY = screenY;
 
-        switch (button) {
-            case Input.Buttons.LEFT:
-                mouseLeft = false;
-                break;
-            case Input.Buttons.RIGHT:
-                mouseRight = false;
-                break;
-        }
+        if      (button == Input.Buttons.LEFT)  mouseLeft  = false;
+        else if (button == Input.Buttons.RIGHT) mouseRight = false;
         return true;
     }
 

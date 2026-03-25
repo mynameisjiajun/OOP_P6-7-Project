@@ -1,10 +1,9 @@
 package io.github.Project.engine.components;
 
 public class HealthComponent {
-    
+
     private final float maxHealth;
     private float currentHealth;
-    private boolean invulnerable = false;
     
     /**
      * Creates a health component with the specified maximum health.
@@ -27,7 +26,6 @@ public class HealthComponent {
      * @param amount damage to apply (must be >= 0)
      */
     public void takeDamage(float amount) {
-        if (invulnerable) return;
         if (amount < 0) {
             throw new IllegalArgumentException("Damage amount cannot be negative");
         }
@@ -88,28 +86,10 @@ public class HealthComponent {
     }
     
     /**
-     * Sets invulnerability state (e.g., during respawn or power-up).
-     * When invulnerable, takeDamage() has no effect.
-     * 
-     * @param invulnerable true to enable invulnerability
-     */
-    public void setInvulnerable(boolean invulnerable) {
-        this.invulnerable = invulnerable;
-    }
-    
-    /**
-     * Checks if currently invulnerable.
-     */
-    public boolean isInvulnerable() {
-        return invulnerable;
-    }
-    
-    /**
-     * Resets health to maximum and clears invulnerability.
+     * Resets health to maximum.
      * Useful for entity respawning or level restart.
      */
     public void reset() {
         currentHealth = maxHealth;
-        invulnerable = false;
     }
 }

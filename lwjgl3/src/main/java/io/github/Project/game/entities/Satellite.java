@@ -38,7 +38,7 @@ public class Satellite extends SpaceStation {
         
         // Replace texture with satellite-specific texture
         if (this.texture != null) this.texture.dispose();
-        this.texture = new Texture("Station/satellites floating.png");
+        this.texture = new Texture("images/entities/Satellite.png");
         
         // ✅ FIX: Use "Satellite" tag instead of "SpaceStation"
         // This enables differential damage and debris spawning

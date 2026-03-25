@@ -40,7 +40,7 @@ public class Ground extends CollidableEntity {
         this.height = height;
         
         // Use dirt/grass texture for visual representation
-        this.texture = new Texture("Dirt texture/desert top.png");
+        this.texture = new Texture("images/backgrounds/desert top.png");
         
         this.collisionTag = "Ground";
     }

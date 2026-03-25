@@ -10,13 +10,13 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 
-import io.github.Project.engine.main.GameMaster;
+import io.github.Project.engine.core.GameMaster;
 import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.EarthStation;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.Satellite;
 import io.github.Project.game.entities.SpaceStation;
-import io.github.Project.game.factory.DebrisFactory;
+import io.github.Project.game.core.factory.DebrisFactory;
 
 /**
  * Owns all world-space rendering: background layers, entities, and
@@ -33,8 +33,6 @@ public class WorldRenderer {
 
     // ── World geometry ───────────────────────────────────────────────────
     private static final int   TILE_SIZE        = 256;
-    public  static final float WORLD_HALF_WIDTH = 1200f;
-
     // ── Agency building display sizes [mission, dish, vab, tanks, tower] ─
     private static final float[] AGENCY_W        = { 400f, 100f, 120f, 200f,  60f };
     private static final float[] AGENCY_H        = { 200f, 125f, 240f, 160f, 370f };
@@ -46,6 +44,16 @@ public class WorldRenderer {
     private static final float   AGENCY_CENTER_EXCLUSION =  320f;
     private static final float   AGENCY_MIN_SPACING      =   45f;
     private static final long    AGENCY_LAYOUT_SEED      = 77777L;
+
+    // ── PCG random number generator constants ────────────────────────────
+    private static final long PCG_MULTIPLIER          = 6364136223846793005L;
+    private static final long PCG_INCREMENT           = 1442695040888963407L;
+    private static final long CLOUD_INIT_SEED         = 12345L;
+    private static final long STAR_INIT_SEED          = 99887L;
+    private static final int  CLOUD_INSTANCE_COUNT    = 30;
+    private static final int  STAR_INSTANCE_COUNT     = 400;
+    private static final float AGENCY_CANDIDATE_STEP  = 25f;
+    private static final float AGENCY_FALLBACK_SPACING = 260f;
 
     // ── Clouds ───────────────────────────────────────────────────────────
     private static final int CLOUD_COUNT = 6;
@@ -125,16 +133,16 @@ public class WorldRenderer {
 
     public void init() {
         // Ground textures
-        grassTopTex = new Texture(Gdx.files.internal("Dirt texture/desert top.png"));
-        dirtTex     = new Texture(Gdx.files.internal("Dirt texture/Dirt.png"));
+        grassTopTex = new Texture(Gdx.files.internal("images/backgrounds/desert top.png"));
+        dirtTex     = new Texture(Gdx.files.internal("images/backgrounds/Dirt.png"));
 
         // Space agency buildings
         agencyTextures = new Texture[AGENCY_VARIANTS];
-        agencyTextures[0] = new Texture(Gdx.files.internal("Ground Assets/mission_control.png"));
-        agencyTextures[1] = new Texture(Gdx.files.internal("Ground Assets/satellite_dish.png"));
-        agencyTextures[2] = new Texture(Gdx.files.internal("Ground Assets/vab_building.png"));
-        agencyTextures[3] = new Texture(Gdx.files.internal("Ground Assets/fuel_tanks.png"));
-        agencyTextures[4] = new Texture(Gdx.files.internal("Ground Assets/launch_tower.png"));
+        agencyTextures[0] = new Texture(Gdx.files.internal("images/ground/mission_control.png"));
+        agencyTextures[1] = new Texture(Gdx.files.internal("images/ground/satellite_dish.png"));
+        agencyTextures[2] = new Texture(Gdx.files.internal("images/ground/vab_building.png"));
+        agencyTextures[3] = new Texture(Gdx.files.internal("images/ground/fuel_tanks.png"));
+        agencyTextures[4] = new Texture(Gdx.files.internal("images/ground/launch_tower.png"));
 
         agencyData = new float[AGENCY_INSTANCES * 2];
         float[] fixedX = { -1300f, -900f, -450f, 450f, 900f };
@@ -144,12 +152,12 @@ public class WorldRenderer {
         }
         long seed = AGENCY_LAYOUT_SEED;
         for (int i = AGENCY_VARIANTS; i < AGENCY_INSTANCES; i++) {
-            seed = seed * 6364136223846793005L + 1442695040888963407L;
+            seed = seed * PCG_MULTIPLIER + PCG_INCREMENT;
             int type = (int)(((seed >> 17) & 0xFF) % AGENCY_VARIANTS);
             float x = 0f;
             boolean placed = false;
             for (int attempt = 0; attempt < 32; attempt++) {
-                seed = seed * 6364136223846793005L + 1442695040888963407L;
+                seed = seed * PCG_MULTIPLIER + PCG_INCREMENT;
                 x = ((seed >> 17) & 0xFFF) / (float) 0xFFF
                     * (AGENCY_SPAWN_MAX_X - AGENCY_SPAWN_MIN_X) + AGENCY_SPAWN_MIN_X;
                 if (Math.abs(x) < AGENCY_CENTER_EXCLUSION)
@@ -157,12 +165,12 @@ public class WorldRenderer {
                 if (!isAgencySpawnTooClose(i, x, type)) { placed = true; break; }
             }
             if (!placed) {
-                for (float candidate = AGENCY_SPAWN_MIN_X; candidate <= AGENCY_SPAWN_MAX_X; candidate += 25f) {
+                for (float candidate = AGENCY_SPAWN_MIN_X; candidate <= AGENCY_SPAWN_MAX_X; candidate += AGENCY_CANDIDATE_STEP) {
                     if (Math.abs(candidate) < AGENCY_CENTER_EXCLUSION) continue;
                     if (!isAgencySpawnTooClose(i, candidate, type)) { x = candidate; placed = true; break; }
                 }
             }
-            if (!placed) x = AGENCY_SPAWN_MAX_X + (i - AGENCY_VARIANTS + 1) * 260f;
+            if (!placed) x = AGENCY_SPAWN_MAX_X + (i - AGENCY_VARIANTS + 1) * AGENCY_FALLBACK_SPACING;
             agencyData[i * 2]     = x;
             agencyData[i * 2 + 1] = type;
         }
@@ -170,31 +178,29 @@ public class WorldRenderer {
         // Clouds
         cloudTextures = new Texture[CLOUD_COUNT];
         for (int i = 0; i < CLOUD_COUNT; i++)
-            cloudTextures[i] = new Texture(Gdx.files.internal("tiles/pixelart_clouds/x5/cloud" + (i + 1) + ".png"));
+            cloudTextures[i] = new Texture(Gdx.files.internal("images/backgrounds/tiles/pixelart_clouds/x5/cloud" + (i + 1) + ".png"));
 
-        int numClouds = 30;
-        cloudPositions = new float[numClouds * 3];
-        long cs = 12345L;
-        for (int i = 0; i < numClouds; i++) {
-            cs = cs * 6364136223846793005L + 1; cloudPositions[i*3]   = ((cs>>17)&0x1FFF)/(float)0x1FFF*3600f-1800f;
-            cs = cs * 6364136223846793005L + 1; cloudPositions[i*3+1] = CLOUD_BAND_MIN + ((cs>>17)&0xFFF)/(float)0xFFF*(CLOUD_BAND_MAX-CLOUD_BAND_MIN);
-            cs = cs * 6364136223846793005L + 1; cloudPositions[i*3+2] = (int)(((cs>>17)&0xFF) % CLOUD_COUNT);
+        cloudPositions = new float[CLOUD_INSTANCE_COUNT * 3];
+        long cs = CLOUD_INIT_SEED;
+        for (int i = 0; i < CLOUD_INSTANCE_COUNT; i++) {
+            cs = cs * PCG_MULTIPLIER + 1; cloudPositions[i*3]   = ((cs>>17)&0x1FFF)/(float)0x1FFF*3600f-1800f;
+            cs = cs * PCG_MULTIPLIER + 1; cloudPositions[i*3+1] = CLOUD_BAND_MIN + ((cs>>17)&0xFFF)/(float)0xFFF*(CLOUD_BAND_MAX-CLOUD_BAND_MIN);
+            cs = cs * PCG_MULTIPLIER + 1; cloudPositions[i*3+2] = (int)(((cs>>17)&0xFF) % CLOUD_COUNT);
         }
 
         // Stars
-        int numStars = 400;
-        starPositions = new float[numStars * 3];
-        long ss = 99887L;
-        for (int i = 0; i < numStars; i++) {
-            ss = ss * 6364136223846793005L + 1; starPositions[i*3]   = ((ss>>17)&0x1FFF)/(float)0x1FFF*6000f-3000f;
-            ss = ss * 6364136223846793005L + 1; starPositions[i*3+1] = EARTH_ZONE_END + ((ss>>17)&0x3FFF)/(float)0x3FFF*8000f;
-            ss = ss * 6364136223846793005L + 1; starPositions[i*3+2] = 0.5f + ((ss>>17)&0xFF)/(float)0xFF*2f;
+        starPositions = new float[STAR_INSTANCE_COUNT * 3];
+        long ss = STAR_INIT_SEED;
+        for (int i = 0; i < STAR_INSTANCE_COUNT; i++) {
+            ss = ss * PCG_MULTIPLIER + 1; starPositions[i*3]   = ((ss>>17)&0x1FFF)/(float)0x1FFF*6000f-3000f;
+            ss = ss * PCG_MULTIPLIER + 1; starPositions[i*3+1] = EARTH_ZONE_END + ((ss>>17)&0x3FFF)/(float)0x3FFF*8000f;
+            ss = ss * PCG_MULTIPLIER + 1; starPositions[i*3+2] = 0.5f + ((ss>>17)&0xFF)/(float)0xFF*2f;
         }
 
         // Effect textures
-        explosionTex      = new Texture(Gdx.files.internal("Explosion_01.png"));
-        atmosphereBurnTex = new Texture(Gdx.files.internal("New space assets/Atomsphere Burn.png"));
-        bowlTex           = new Texture(Gdx.files.internal("New space assets/Bowl.png"));
+        explosionTex      = new Texture(Gdx.files.internal("images/effects/Explosion_01.png"));
+        atmosphereBurnTex = new Texture(Gdx.files.internal("images/effects/Atmosphere_Burn.png"));
+        bowlTex           = new Texture(Gdx.files.internal("images/effects/Bowl.png"));
     }
 
     // ── Update ───────────────────────────────────────────────────────────
@@ -234,8 +240,42 @@ public class WorldRenderer {
 
     // ── Draw ─────────────────────────────────────────────────────────────
 
+    /**
+     * Main render entry point. Delegates each visual layer to a focused
+     * private method: camera, background, entities, effects, and UI overlays.
+     *
+     * @param delta      seconds since last frame
+     * @param gameCamera world-space camera to position and render through
+     */
     public void draw(float delta, OrthographicCamera gameCamera) {
-        // Camera position — follow rocket, add shake offsets
+        updateCamera(gameCamera);
+
+        float camX  = gameCamera.position.x;
+        float camY  = gameCamera.position.y;
+        float halfW = gameCamera.viewportWidth  / 2f;
+        float halfH = gameCamera.viewportHeight / 2f;
+
+        clearBackground(camY);
+        drawStars(gameCamera, camX, camY, halfW, halfH);
+
+        SpriteBatch batch = gameMaster.getSharedBatch();
+        batch.setProjectionMatrix(gameCamera.combined);
+        batch.begin();
+        drawBackground(batch, camX, camY, halfW, halfH);
+        drawEntities(batch);
+        drawEffects(batch);
+        batch.end();
+
+        drawSatelliteHealthBars(gameCamera);
+    }
+
+    // ── Private draw helpers ──────────────────────────────────────────────
+
+    /**
+     * Positions the camera to follow the rocket centre, applying shake
+     * offsets from the station and any shaking satellite.
+     */
+    private void updateCamera(OrthographicCamera gameCamera) {
         float baseCamX = rocket.getPosX() + rocket.getWidth()  / 2f;
         float baseCamY = rocket.getPosY() + rocket.getHeight() / 2f;
 
@@ -259,49 +299,52 @@ public class WorldRenderer {
         }
         gameCamera.position.set(baseCamX, baseCamY, 0f);
         gameCamera.update();
+    }
 
-        float camX  = gameCamera.position.x;
-        float camY  = gameCamera.position.y;
-        float halfW = gameCamera.viewportWidth  / 2f;
-        float halfH = gameCamera.viewportHeight / 2f;
-
-        // Background clear colour (sky ↔ space gradient)
+    /** Clears the screen with the sky-to-space gradient colour for the current altitude. */
+    private void clearBackground(float camY) {
         getZoneColor(camY, tempColor);
         Gdx.gl.glClearColor(tempColor.r, tempColor.g, tempColor.b, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    }
 
-        // Stars (ShapeRenderer pass)
+    /** Renders star dots via ShapeRenderer; fades in as the camera enters the space zone. */
+    private void drawStars(OrthographicCamera gameCamera, float camX, float camY,
+                           float halfW, float halfH) {
         float starAlpha = camY >= SPACE_ZONE_START ? 1f
-            : camY > EARTH_ZONE_END ? (camY - EARTH_ZONE_END) / (SPACE_ZONE_START - EARTH_ZONE_END)
+            : camY > EARTH_ZONE_END
+                ? (camY - EARTH_ZONE_END) / (SPACE_ZONE_START - EARTH_ZONE_END)
             : 0f;
-        if (starAlpha > 0f) {
-            ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
-            sr.setProjectionMatrix(gameCamera.combined);
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            sr.begin(ShapeRenderer.ShapeType.Filled);
-            for (int i = 0; i < starPositions.length; i += 3) {
-                float sx = starPositions[i], sy = starPositions[i + 1];
-                if (sy < camY - halfH || sy > camY + halfH) continue;
-                if (sx < camX - halfW || sx > camX + halfW) continue;
-                sr.setColor(1f, 1f, 1f, starAlpha);
-                sr.circle(sx, sy, starPositions[i + 2]);
-            }
-            sr.end();
+        if (starAlpha <= 0f) return;
+
+        ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
+        sr.setProjectionMatrix(gameCamera.combined);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        for (int i = 0; i < starPositions.length; i += 3) {
+            float sx = starPositions[i];
+            float sy = starPositions[i + 1];
+            if (sy < camY - halfH || sy > camY + halfH) continue;
+            if (sx < camX - halfW || sx > camX + halfW) continue;
+            sr.setColor(1f, 1f, 1f, starAlpha);
+            sr.circle(sx, sy, starPositions[i + 2]);
         }
+        sr.end();
+    }
 
-        SpriteBatch batch = gameMaster.getSharedBatch();
-        batch.setProjectionMatrix(gameCamera.combined);
-        batch.begin();
-
-        drawBackground(batch, camX, camY, halfW, halfH);
-
-        // Space station
+    /** Renders all game entities: station, earth pad, satellites, debris, rocket, and bowl. */
+    private void drawEntities(SpriteBatch batch) {
         spaceStation.render(batch, null);
-
-        // Earth station (landing pad)
         earthStation.render(batch, null);
+        drawStationHitFx(batch);
+        for (int i = 0; i < satellites.size; i++) satellites.get(i).render(batch, null);
+        drawDebris(batch);
+        rocket.render(batch, null);
+        drawBowl(batch);
+    }
 
-        // Mini explosion bursts on station impacts
+    /** Draws the short spark/flash bursts at each recent station impact point. */
+    private void drawStationHitFx(SpriteBatch batch) {
         for (int i = 0; i < stationHitFxList.size; i++) {
             StationHitFx fx = stationHitFxList.get(i);
             float alpha = fx.timer / STATION_HIT_FX_DURATION;
@@ -310,42 +353,39 @@ public class WorldRenderer {
                 fx.x - fx.size / 2f, fx.y - fx.size / 2f, fx.size, fx.size);
         }
         batch.setColor(1f, 1f, 1f, 1f);
+    }
 
-        // Satellites
-        for (int i = 0; i < satellites.size; i++) satellites.get(i).render(batch, null);
-
-        // Flying debris — hot debris rendered with orange-red tint
+    /**
+     * Renders all flying and attached debris.
+     * Colour tinting is handled entirely by {@link Debris#render} via its
+     * heat-level system — no external tint is applied here.
+     */
+    private void drawDebris(SpriteBatch batch) {
         Array<Debris> flying = debrisManager.getFlying();
-        for (int i = 0; i < flying.size; i++) {
-            Debris d = flying.get(i);
-            if (d.isHot()) batch.setColor(1f, 0.35f, 0.15f, 1f);
-            d.render(batch, null);
-            if (d.isHot()) batch.setColor(1f, 1f, 1f, 1f);
-        }
+        for (int i = 0; i < flying.size; i++) flying.get(i).render(batch, null);
 
-        // Attached debris (at bowl)
         Array<Debris> attached = debrisManager.getAttached();
         for (int i = 0; i < attached.size; i++) attached.get(i).render(batch, null);
+    }
 
-        // Rocket
-        rocket.render(batch, null);
+    /** Draws the bowl attachment texture at the rocket's nose tip. */
+    private void drawBowl(SpriteBatch batch) {
+        if (bowlTex == null) return;
+        float rCX   = rocket.getPosX() + rocket.getWidth()  / 2f;
+        float rCY   = rocket.getPosY() + rocket.getHeight() / 2f;
+        float rot   = rocket.getRotation();
+        float noseX = rCX + MathUtils.cosDeg(rot) * (rocket.getHeight() / 2f);
+        float noseY = rCY + MathUtils.sinDeg(rot) * (rocket.getHeight() / 2f);
+        batch.draw(bowlTex,
+            noseX - BOWL_DRAW_W / 2f, noseY - BOWL_DRAW_H / 2f,
+            BOWL_DRAW_W / 2f, BOWL_DRAW_H / 2f, BOWL_DRAW_W, BOWL_DRAW_H,
+            1f, 1f, rot - 90f,
+            0, 0, bowlTex.getWidth(), bowlTex.getHeight(),
+            false, false);
+    }
 
-        // Bowl texture at rocket nose
-        if (bowlTex != null) {
-            float rCX  = rocket.getPosX() + rocket.getWidth()  / 2f;
-            float rCY  = rocket.getPosY() + rocket.getHeight() / 2f;
-            float rot  = rocket.getRotation();
-            float noseX = rCX + MathUtils.cosDeg(rot) * (rocket.getHeight() / 2f);
-            float noseY = rCY + MathUtils.sinDeg(rot) * (rocket.getHeight() / 2f);
-            batch.draw(bowlTex,
-                noseX - BOWL_DRAW_W / 2f, noseY - BOWL_DRAW_H / 2f,
-                BOWL_DRAW_W / 2f, BOWL_DRAW_H / 2f, BOWL_DRAW_W, BOWL_DRAW_H,
-                1f, 1f, rot - 90f,
-                0, 0, bowlTex.getWidth(), bowlTex.getHeight(),
-                false, false);
-        }
-
-        // Explosion flash
+    /** Renders the satellite explosion flash and the atmosphere-burn streak effects. */
+    private void drawEffects(SpriteBatch batch) {
         if (explosionTimer > 0f) {
             batch.setColor(1f, 1f, 1f, explosionTimer / EXPLOSION_DURATION);
             batch.draw(explosionTex,
@@ -353,8 +393,6 @@ public class WorldRenderer {
                 EXPLOSION_SIZE, EXPLOSION_SIZE);
             batch.setColor(1f, 1f, 1f, 1f);
         }
-
-        // Atmosphere burn effect
         if (atmosphereBurnTimer > 0f && atmosphereBurnTex != null) {
             float alpha = atmosphereBurnTimer / ATMOSPHERE_BURN_DURATION;
             batch.setColor(1f, 0.55f + 0.45f * alpha, 0.1f * alpha, alpha);
@@ -363,28 +401,33 @@ public class WorldRenderer {
                 BURN_SIZE, BURN_SIZE);
             batch.setColor(1f, 1f, 1f, 1f);
         }
+    }
 
-        batch.end();
-
-        // Satellite health bars + nav arrow (ShapeRenderer in world space)
+    /** Draws a small health bar above each satellite using ShapeRenderer in world space. */
+    private void drawSatelliteHealthBars(OrthographicCamera gameCamera) {
         ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
         sr.setProjectionMatrix(gameCamera.combined);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         sr.begin(ShapeRenderer.ShapeType.Filled);
         for (int i = 0; i < satellites.size; i++) {
             Satellite sat = satellites.get(i);
-            float bw = sat.getWidth();
             float bx = sat.getPosX();
             float by = sat.getPosY() + sat.getHeight() + 6f;
+            float bw = sat.getWidth();
             float hp = sat.getHealthPercentage();
             sr.setColor(0.2f, 0.2f, 0.2f, 0.7f);
             sr.rect(bx, by, bw, 6f);
-            if      (hp > 0.5f)  sr.setColor(Color.GREEN);
-            else if (hp > 0.25f) sr.setColor(Color.YELLOW);
-            else                 sr.setColor(Color.RED);
+            sr.setColor(satelliteHealthColor(hp));
             sr.rect(bx, by, bw * hp, 6f);
         }
         sr.end();
+    }
+
+    /** Returns green/yellow/red depending on satellite health percentage. */
+    private Color satelliteHealthColor(float hp) {
+        if (hp > 0.5f)  return Color.GREEN;
+        if (hp > 0.25f) return Color.YELLOW;
+        return Color.RED;
     }
 
     // ── Dispose ──────────────────────────────────────────────────────────

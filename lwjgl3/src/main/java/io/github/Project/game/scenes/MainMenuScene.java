@@ -7,7 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import io.github.Project.engine.main.GameMaster;
+import io.github.Project.engine.core.GameMaster;
 
 /**
  * Main menu scene — space-themed entry screen.

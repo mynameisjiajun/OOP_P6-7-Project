@@ -3,8 +3,8 @@ package io.github.Project.engine.managers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
-import io.github.Project.engine.main.GameMaster;
-import io.github.Project.engine.scenes.Scene;
+import io.github.Project.engine.core.GameMaster;
+import io.github.Project.engine.core.Scene;
 import io.github.Project.game.scenes.MainMenuScene;
 import io.github.Project.game.scenes.PauseScene;
 import io.github.Project.game.scenes.PlayScene;
@@ -107,7 +107,7 @@ public class IOManager {
             return;
         }
 
-        if (gameMaster.getInputMovement().keyUp) {
+        if (gameMaster.getInputMovement().isKeyUp()) {
             gameMaster.getAudioManager().playRocketLoop();
         } else {
             gameMaster.getAudioManager().stopRocketLoop();

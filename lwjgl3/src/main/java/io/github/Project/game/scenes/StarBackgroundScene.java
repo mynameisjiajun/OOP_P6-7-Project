@@ -9,8 +9,8 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import io.github.Project.engine.main.GameMaster;
-import io.github.Project.engine.scenes.Scene;
+import io.github.Project.engine.core.GameMaster;
+import io.github.Project.engine.core.Scene;
 import io.github.Project.game.ui.UISkinFactory;
 
 import java.util.Random;

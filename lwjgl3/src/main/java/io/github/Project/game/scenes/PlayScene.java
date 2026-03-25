@@ -5,23 +5,24 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.Array;
 
-import io.github.Project.engine.main.GameMaster;
-import io.github.Project.engine.scenes.Scene;
+import io.github.Project.engine.core.GameMaster;
+import io.github.Project.engine.core.Scene;
 
-import io.github.Project.game.events.GameEventListener;
-import io.github.Project.game.collisionstrategies.RocketCollisionStrategy;
-import io.github.Project.game.collisionstrategies.SatelliteCollisionStrategy;
-import io.github.Project.game.collisionstrategies.SpaceStationCollisionStrategy;
+import io.github.Project.game.core.events.GameEventListener;
+import io.github.Project.game.systems.collisionstrategies.RocketCollisionStrategy;
+import io.github.Project.game.systems.collisionstrategies.SatelliteCollisionStrategy;
+import io.github.Project.game.systems.collisionstrategies.SpaceStationCollisionStrategy;
 import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.EarthStation;
 import io.github.Project.game.entities.Ground;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.Satellite;
 import io.github.Project.game.entities.SpaceStation;
-import io.github.Project.game.entities.arrow;
-import io.github.Project.game.factory.GameObjectFactory;
-import io.github.Project.game.movementstrategy.RocketMovementStrategy;
-import io.github.Project.game.factory.DebrisFactory;
+import io.github.Project.game.entities.Arrow;
+import io.github.Project.game.entities.HealthBar;
+import io.github.Project.game.core.factory.GameObjectFactory;
+import io.github.Project.game.systems.movementstrategy.RocketMovementStrategy;
+import io.github.Project.game.core.factory.DebrisFactory;
 import io.github.Project.game.rendering.WorldRenderer;
 import io.github.Project.game.ui.HUDRenderer;
 
@@ -87,7 +88,7 @@ public class PlayScene extends Scene {
     private RocketCollisionStrategy rocketStrategy;
 
     // ── Navigation arrow ──────────────────────────────────────────────
-    private arrow navArrow;
+    private Arrow navArrow;
 
     // ── Factory ────────────────────────────────────────────────────────
     private GameObjectFactory factory;
@@ -202,8 +203,7 @@ public class PlayScene extends Scene {
             earthStation, satellites, debrisManager);
         worldRenderer.init();
 
-        io.github.Project.game.entities.healthbar stationBar =
-            factory.createHealthBar(0f, 0f, 300f, 20f);
+        HealthBar stationBar = factory.createHealthBar(0f, 0f, 300f, 20f);
         hudRenderer = new HUDRenderer(gameMaster, rocket, spaceStation, debrisManager, stationBar);
         hudRenderer.show(
             "Over 27,000 pieces of tracked debris orbit Earth - this game shows why it matters");

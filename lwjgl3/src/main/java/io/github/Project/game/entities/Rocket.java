@@ -50,12 +50,12 @@ public class Rocket extends CollidableEntity {
         this.originX = width / 2f;
         this.originY = drawFlame + height / 2f;
 
-        this.staticTexture = new Texture("rocket.png");
+        this.staticTexture = new Texture("images/entities/rocket.png");
 
         TextureRegion[] frames = new TextureRegion[FRAME_COUNT];
         for (int i = 0; i < FRAME_COUNT; i++) {
             frameTextures[i] = new Texture(
-                String.format("rocket_frames/Missile_1_Flying_%03d.png", i));
+                String.format("images/entities/rocket_frames/Missile_1_Flying_%03d.png", i));
             frames[i] = new TextureRegion(frameTextures[i]);
         }
         thrustAnimation = new Animation<>(FRAME_DURATION, frames);
@@ -68,7 +68,7 @@ public class Rocket extends CollidableEntity {
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         float visualRot = rotation - 90f;
 
-        if (input.keyUp) {
+        if (input.isKeyUp()) {
             // Thrust animation
             animStateTime += Gdx.graphics.getDeltaTime();
             TextureRegion frame = thrustAnimation.getKeyFrame(animStateTime);

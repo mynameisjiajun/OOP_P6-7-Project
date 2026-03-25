@@ -20,6 +20,25 @@ import io.github.Project.engine.entities.CollidableEntity;
  * loading a new GPU texture for every piece of debris.
  */
 public class Debris extends CollidableEntity {
+
+    /**
+     * Lifecycle state of a debris piece.
+     *
+     * Using an enum prevents the invalid boolean combinations that were
+     * possible with separate {@code attached}, {@code reentryCandidate},
+     * and {@code destroyed} fields (e.g. both attached AND reentry at once).
+     */
+    public enum DebrisState {
+        /** Freely drifting in the space zone — the default state. */
+        FLYING,
+        /** Locked onto the rocket's nose bowl; position is driven by the rocket. */
+        ATTACHED,
+        /** Launched downward by the player; subject to reentry gravity and atmosphere burn. */
+        REENTRY,
+        /** Hit by a collision; will be removed from the world next frame. */
+        DESTROYED
+    }
+
     public enum DebrisClass {
         SMALL(0.75f, 1, 0.75f),
         MEDIUM(1.00f, 1, 1.00f),
@@ -44,16 +63,16 @@ public class Debris extends CollidableEntity {
     private static final float HOT_THRESHOLD_MIN = 35f;
     private static final float HOT_THRESHOLD_MAX = 55f;
 
-    // ── Speed thresholds for visual heat level (units/s) ──────────────────
-    private static final float HEAT_SPEED_MIN  = 12f;   // below this: cool
-    private static final float HEAT_SPEED_MAX  = 40f;   // at this speed: fully hot visually
-    private static final float HOT_HEAT_BONUS  = 0.30f; // added to heatLevel when hot flag fires
+    // ── Kessler mode speed-based heat (units/s) ───────────────────────────
+    private static final float HEAT_SPEED_MIN         = 12f;  // below this: cool in Kessler
+    private static final float HEAT_SPEED_MAX_KESSLER = 60f;  // fully red at this speed in Kessler
+    private boolean            kesslerMode            = false;
 
     // ── Regular debris texture variants ──────────────────────────────────
     private static final String[] DEBRIS_TEXTURES = {
-        "Space Debris/Space Debris 1.png", "Space Debris/Space Debris 2.png",
-        "Space Debris/Space Debris 3.png", "Space Debris/Space Debris 4.png",
-        "Space Debris/Space Debris 5.png", "Space Debris/Space Debris 6.png"
+        "images/entities/debris/Space Debris 1.png", "images/entities/debris/Space Debris 2.png",
+        "images/entities/debris/Space Debris 3.png", "images/entities/debris/Space Debris 4.png",
+        "images/entities/debris/Space Debris 5.png", "images/entities/debris/Space Debris 6.png"
     };
 
     // ── Shared hot texture (loaded once for all instances) ────────────────
@@ -66,16 +85,14 @@ public class Debris extends CollidableEntity {
     private final float height;
     private float   rotation     = 0f;
     private final float baseRotationSpeed;
-    private boolean destroyed    = false;
     private final DebrisClass debrisClass;
 
-    // ── Heat / attached state ─────────────────────────────────────────────
+    // ── Heat / motion state ───────────────────────────────────────────────
+    private DebrisState state           = DebrisState.FLYING;
     private float   aliveTimer      = 0f;
     private final float hotThreshold;   // randomised per instance (HOT_THRESHOLD_MIN..MAX)
     private boolean hot             = false;
     private float   heatLevel       = 0f;   // 0=cool, 1=fully hot — driven by speed
-    private boolean attached        = false;
-    private boolean reentryCandidate = false;
     private float   captureCooldown = 0f;
 
     public Debris(float x, float y, float speed, float width, float height) {
@@ -111,19 +128,21 @@ public class Debris extends CollidableEntity {
         updateBounds();
 
         // Track alive time only while freely floating (not attached to rocket)
-        if (!attached) {
+        if (state != DebrisState.ATTACHED) {
             aliveTimer += deltaTime;
             if (aliveTimer >= hotThreshold) hot = true;
         }
 
-        // Heat level: driven by current speed + bonus when the hot flag fires
-        float speed      = (float) Math.sqrt(getVx() * getVx() + getVy() * getVy());
-        float speedHeat  = Math.max(0f, Math.min(1f,
-            (speed - HEAT_SPEED_MIN) / (HEAT_SPEED_MAX - HEAT_SPEED_MIN)));
-        float targetHeat = Math.min(1f, speedHeat + (hot ? HOT_HEAT_BONUS : 0f));
-        // Lerp smoothly — heat builds fast, cools slowly (inertia feel)
-        float lerpRate   = targetHeat > heatLevel ? 4f : 1.5f;
-        heatLevel += (targetHeat - heatLevel) * lerpRate * deltaTime;
+        // Heat level: only active in Kessler mode — driven by speed (orange→red)
+        if (kesslerMode) {
+            float speed     = (float) Math.sqrt(getVx() * getVx() + getVy() * getVy());
+            float target    = Math.max(0f, Math.min(1f,
+                (speed - HEAT_SPEED_MIN) / (HEAT_SPEED_MAX_KESSLER - HEAT_SPEED_MIN)));
+            float lerpRate  = target > heatLevel ? 4f : 1.5f;
+            heatLevel += (target - heatLevel) * lerpRate * deltaTime;
+        } else {
+            heatLevel = 0f;
+        }
 
         if (captureCooldown > 0f) {
             captureCooldown = Math.max(0f, captureCooldown - deltaTime);
@@ -132,26 +151,22 @@ public class Debris extends CollidableEntity {
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        // Switch to hot texture once visually hot enough
-        Texture renderTex = (heatLevel >= 0.75f && sharedHotTexture != null)
+        // Hot texture only in Kessler mode at max speed
+        Texture renderTex = (kesslerMode && heatLevel >= 0.99f && sharedHotTexture != null)
             ? sharedHotTexture : texture;
 
-        // Continuous colour gradient: white → yellow → orange → red
-        float r, g, b;
-        if (heatLevel < 0.33f) {
-            float t = heatLevel / 0.33f;
-            r = 1f; g = 1f; b = 1f - t;          // white → yellow
-        } else if (heatLevel < 0.66f) {
-            float t = (heatLevel - 0.33f) / 0.33f;
-            r = 1f; g = 1f - t * 0.55f; b = 0f;  // yellow → orange
-        } else {
-            float t = (heatLevel - 0.66f) / 0.34f;
-            r = 1f; g = 0.45f - t * 0.45f; b = 0f; // orange → red
+        if (kesslerMode) {
+            // Kessler: orange → red gradient based on speed
+            float g = 0.45f * (1f - heatLevel);
+            batch.setColor(1f, g, 0f, 1f);
+        } else if (hot) {
+            // Normal hot: flat orange tint
+            batch.setColor(1f, 0.45f, 0f, 1f);
         }
-        batch.setColor(r, g, b, 1f);
+        // else: no tint (normal colour)
 
-        // Gentle shimmer pulse when hot (scale oscillates ±5%)
-        float pulse = heatLevel > 0.5f
+        // Shimmer pulse only in Kessler mode
+        float pulse = (kesslerMode && heatLevel > 0.5f)
             ? 1f + (float) Math.sin(aliveTimer * 10.0) * 0.05f * heatLevel
             : 1f;
 
@@ -171,29 +186,39 @@ public class Debris extends CollidableEntity {
 
     // ── State accessors ───────────────────────────────────────────────────
 
-    public void    setDestroyed(boolean destroyed) { this.destroyed = destroyed; }
-    public boolean isDestroyed()                   { return destroyed; }
+    /**
+     * Sets the lifecycle state of this debris piece.
+     * Prefer this over the individual boolean setters that have been removed;
+     * it guarantees only one valid state is active at a time.
+     *
+     * @param state the new state
+     */
+    public void       setState(DebrisState state)  { this.state = state; }
 
-    public boolean isHot()          { return hot; }
-    public float   getHeatLevel()   { return heatLevel; }
-    public void    forceHot()       { hot = true; }
+    /** @return the current lifecycle state */
+    public DebrisState getState()                  { return state; }
 
-    public boolean isAttached()                    { return attached; }
-    public void    setAttached(boolean attached)   { this.attached = attached; }
+    // Convenience state-check helpers (backed by the DebrisState enum)
+    public boolean isDestroyed()       { return state == DebrisState.DESTROYED; }
+    public boolean isAttached()        { return state == DebrisState.ATTACHED;  }
+    public boolean isReentryCandidate(){ return state == DebrisState.REENTRY;   }
 
-    public boolean isReentryCandidate()                    { return reentryCandidate; }
-    public void    setReentryCandidate(boolean candidate)  { this.reentryCandidate = candidate; }
-    public boolean canBeCaptured()                         { return captureCooldown <= 0f; }
-    public void    setCaptureCooldown(float seconds)       { this.captureCooldown = Math.max(0f, seconds); }
-    public DebrisClass getDebrisClass()                    { return debrisClass; }
-    public int getClearScore()                             { return debrisClass.getClearScore(); }
-    public float getStationDamageMultiplier()              { return debrisClass.getStationDamageMultiplier(); }
+    public boolean isHot()                   { return hot; }
+    public float   getHeatLevel()            { return heatLevel; }
+    public void    forceHot()                { hot = true; }
+    public void    setKesslerMode(boolean on){ kesslerMode = on; }
+
+    public boolean canBeCaptured()                   { return captureCooldown <= 0f; }
+    public void    setCaptureCooldown(float seconds) { this.captureCooldown = Math.max(0f, seconds); }
+    public DebrisClass getDebrisClass()              { return debrisClass; }
+    public int         getClearScore()               { return debrisClass.getClearScore(); }
+    public float       getStationDamageMultiplier()  { return debrisClass.getStationDamageMultiplier(); }
 
     // ── Static hot-texture lifecycle (avoids writing statics from instance) ─
 
     private static void acquireHotTexture() {
         if (sharedHotTexture == null) {
-            sharedHotTexture = new Texture("New space assets/Space_Debris_Hot.png");
+            sharedHotTexture = new Texture("images/entities/debris/Space_Debris_Hot.png");
         }
         hotTextureUsers++;
     }

@@ -44,7 +44,7 @@ public class SpaceStation extends CollidableEntity {
      */
     public SpaceStation(float x, float y, float width, float height, float maxHealth) {
         super(x, y, 0, width, height);
-        this.texture = new Texture("New space assets/Space_Station.png");
+        this.texture = new Texture("images/entities/Space_Station.png");
         this.width = width;
         this.height = height;
         this.health = new HealthComponent(maxHealth);

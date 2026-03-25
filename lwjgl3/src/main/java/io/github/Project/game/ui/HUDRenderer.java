@@ -8,12 +8,12 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import io.github.Project.engine.main.GameMaster;
-import io.github.Project.game.collisionstrategies.RocketCollisionStrategy;
+import io.github.Project.engine.core.GameMaster;
+import io.github.Project.game.systems.collisionstrategies.RocketCollisionStrategy;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.SpaceStation;
-import io.github.Project.game.entities.healthbar;
-import io.github.Project.game.factory.DebrisFactory;
+import io.github.Project.game.entities.HealthBar;
+import io.github.Project.game.core.factory.DebrisFactory;
 
 /**
  * Renders the in-game HUD: stats panel, station health bar,
@@ -34,7 +34,7 @@ public class HUDRenderer {
 
     private final BitmapFont  font;
     private final GlyphLayout glyphLayout;
-    private final healthbar   stationHealthBar;
+    private final HealthBar   stationHealthBar;
 
     // ── Notification state ───────────────────────────────────────────────
     private String notifText  = null;
@@ -49,7 +49,7 @@ public class HUDRenderer {
     public HUDRenderer(GameMaster gameMaster, Rocket rocket,
                        SpaceStation spaceStation,
                        DebrisFactory debrisManager,
-                       healthbar stationHealthBar) {
+                       HealthBar stationHealthBar) {
         this.gameMaster   = gameMaster;
         this.rocket       = rocket;
         this.spaceStation = spaceStation;
@@ -59,6 +59,20 @@ public class HUDRenderer {
         this.stationHealthBar = stationHealthBar;
     }
 
+    // ── Layout constants ─────────────────────────────────────────────────
+    private static final float PANEL_WIDTH          = 230f;
+    private static final float PANEL_HEIGHT         = 135f;
+    private static final float HEALTH_BAR_WIDTH     = 300f;
+    private static final float HEALTH_BAR_Y_OFFSET  = 28f;
+    private static final float LANDING_GUIDE_Y      = 108f;
+    private static final float LANDING_GUIDE_HEIGHT = 80f;
+    private static final float LANDING_ALT_THRESHOLD = 500f;
+    private static final float REPAIR_FADE_DIVISOR  = 0.75f; // 2.5f * 0.3f
+
+    /**
+     * Main HUD draw entry point. Delegates each visual concern to a focused
+     * private method to keep cyclomatic complexity low.
+     */
     public void draw(OrthographicCamera hudCamera,
                      float repairCooldownTimer,
                      float repairMessageTimer,
@@ -77,19 +91,46 @@ public class HUDRenderer {
         Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_BLEND);
         sr.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Top-left stats panel
-        sr.setColor(0f, 0f, 0f, 0.55f);
-        sr.rect(0f, vH - 135f, 230f, 135f);
+        drawStatsPanelBackground(sr, vH);
+        drawStationHealthBarBackground(sr, vW, vH, stationWarningActive, stationWarningPulse);
+        if (kesslerActive) drawKesslerBanner(sr, vW, vH, kesslerPulse);
 
-        // Top-centre station health bar background
-        float barW = 300f;
+        sr.end();
+
+        SpriteBatch batch = gameMaster.getSharedBatch();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        drawStationHealthBarLabel(batch, vW, vH, stationWarningActive);
+        if (kesslerActive) drawKesslerText(batch, vW, vH);
+        drawStatsText(batch, vH, repairCooldownTimer);
+        if (repairMessageTimer > 0f) drawRepairMessage(batch, vW, vH, repairMessageTimer, stationRepairAmount);
+        drawNotification(batch, vW, Gdx.graphics.getDeltaTime());
+        if (rocket.getPosY() < LANDING_ALT_THRESHOLD) drawLandingGuide(batch, sr);
+        drawControlHints(batch);
+
+        batch.end();
+    }
+
+    // ── Private draw helpers ─────────────────────────────────────────────
+
+    /** Draws the semi-transparent background behind the top-left stats block. */
+    private void drawStatsPanelBackground(ShapeRenderer sr, float vH) {
+        sr.setColor(0f, 0f, 0f, 0.55f);
+        sr.rect(0f, vH - PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
+    }
+
+    /** Draws the station health bar track and optional warning pulse overlay. */
+    private void drawStationHealthBarBackground(ShapeRenderer sr, float vW, float vH,
+                                                boolean warningActive, float warningPulse) {
+        float barW = HEALTH_BAR_WIDTH;
         float barX = (vW - barW) / 2f;
-        float barY = vH - 28f;
+        float barY = vH - HEALTH_BAR_Y_OFFSET;
         sr.setColor(0f, 0f, 0f, 0.60f);
         sr.rect(barX - 8f, barY - 4f, barW + 16f, 40f);
 
-        if (stationWarningActive) {
-            float pulse = (MathUtils.sin(stationWarningPulse) + 1f) / 2f;
+        if (warningActive) {
+            float pulse = (MathUtils.sin(warningPulse) + 1f) / 2f;
             sr.setColor(1f, 0.2f, 0f, 0.4f * pulse);
             sr.rect(barX - 8f, barY - 4f, barW + 16f, 40f);
         }
@@ -99,52 +140,45 @@ public class HUDRenderer {
         stationHealthBar.setPosY(barY);
         stationHealthBar.setHP(hp);
         stationHealthBar.render(null, sr);
+    }
 
-        // Kessler warning banner
-        if (kesslerActive) {
-            float pulse = (MathUtils.sin(kesslerPulse) + 1f) / 2f;
-            sr.setColor(0.8f, 0f, 0f, 0.35f + 0.25f * pulse);
-            sr.rect(0f, vH / 2f - 22f, vW, 44f);
-        }
+    /** Draws the pulsing red Kessler cascade banner across the screen centre. */
+    private void drawKesslerBanner(ShapeRenderer sr, float vW, float vH, float kesslerPulse) {
+        float pulse = (MathUtils.sin(kesslerPulse) + 1f) / 2f;
+        sr.setColor(0.8f, 0f, 0f, 0.35f + 0.25f * pulse);
+        sr.rect(0f, vH / 2f - 22f, vW, 44f);
+    }
 
-        sr.end();
-
-        SpriteBatch batch = gameMaster.getSharedBatch();
-        batch.setProjectionMatrix(hudCamera.combined);
-        batch.begin();
-
-        // Station label
+    /** Draws the station health bar label, switching to a warning string when threatened. */
+    private void drawStationHealthBarLabel(SpriteBatch batch, float vW, float vH, boolean warningActive) {
         font.getData().setScale(0.75f);
-        String stLabel = stationWarningActive ? "!! STATION UNDER THREAT !!" : "SPACE STATION HEALTH";
-        font.setColor(stationWarningActive ? new Color(1f, 0.35f, 0f, 1f) : Color.WHITE);
-        glyphLayout.setText(font, stLabel);
-        font.draw(batch, stLabel, (vW - glyphLayout.width) / 2f, vH - 31f);
+        String label = warningActive ? "!! STATION UNDER THREAT !!" : "SPACE STATION HEALTH";
+        font.setColor(warningActive ? new Color(1f, 0.35f, 0f, 1f) : Color.WHITE);
+        glyphLayout.setText(font, label);
+        font.draw(batch, label, (vW - glyphLayout.width) / 2f, vH - 31f);
         font.setColor(Color.WHITE);
+    }
 
-        // Kessler warning text
-        if (kesslerActive) {
-            font.getData().setScale(0.9f);
-            font.setColor(1f, 0.25f, 0.1f, 1f);
-            String kMsg = "!! KESSLER CASCADE ACTIVE !!";
-            glyphLayout.setText(font, kMsg);
-            font.draw(batch, kMsg, (vW - glyphLayout.width) / 2f, vH / 2f + 8f);
-            font.setColor(Color.WHITE);
-        }
+    /** Draws the "KESSLER CASCADE ACTIVE" warning text in the screen centre. */
+    private void drawKesslerText(SpriteBatch batch, float vW, float vH) {
+        font.getData().setScale(0.9f);
+        font.setColor(1f, 0.25f, 0.1f, 1f);
+        String msg = "!! KESSLER CASCADE ACTIVE !!";
+        glyphLayout.setText(font, msg);
+        font.draw(batch, msg, (vW - glyphLayout.width) / 2f, vH / 2f + 8f);
+        font.setColor(Color.WHITE);
+    }
 
-        // Top-left stats
+    /** Draws the top-left stats block: altitude, score, orbit count, bowl, and pad status. */
+    private void drawStatsText(SpriteBatch batch, float vH, float repairCooldownTimer) {
         font.getData().setScale(0.8f);
         font.setColor(Color.WHITE);
-        font.draw(batch, "ALT:   " + (int) rocket.getPosY() + " m",                          10f, vH - 15f);
+        font.draw(batch, "ALT:   " + (int) rocket.getPosY() + " m", 10f, vH - 15f);
         font.draw(batch, "SCORE: " + debrisManager.getDebrisCollected() + "/" + DebrisFactory.WIN_CLEAR_SCORE, 10f, vH - 35f);
 
         int inFlight = debrisManager.getFlying().size;
-        Color debrisColor;
-        if      (inFlight > 10) debrisColor = Color.RED;
-        else if (inFlight >  5) debrisColor = Color.YELLOW;
-        else                    debrisColor = Color.LIGHT_GRAY;
-        font.setColor(debrisColor);
+        font.setColor(orbitColor(inFlight));
         font.draw(batch, "ORBIT: " + inFlight + " debris", 10f, vH - 55f);
-        font.setColor(Color.WHITE);
 
         int bowlCount = debrisManager.getAttached().size;
         font.setColor(bowlCount > 0 ? Color.CYAN : Color.LIGHT_GRAY);
@@ -155,99 +189,110 @@ public class HUDRenderer {
         font.setColor(0.65f, 0.65f, 0.65f, 1f);
         font.draw(batch, "STATION: " + (int)(spaceStation.getHealthPercentage() * 100) + "% HP", 10f, vH - 95f);
 
-        // Pad repair cooldown
+        font.getData().setScale(0.8f);
         if (repairCooldownTimer > 0f) {
-            font.getData().setScale(0.8f);
             font.setColor(1f, 0.6f, 0.1f, 1f);
             font.draw(batch, "PAD: ready in " + (int) Math.ceil(repairCooldownTimer) + "s", 10f, vH - 118f);
         } else {
-            font.getData().setScale(0.8f);
             font.setColor(0.2f, 1f, 0.4f, 1f);
             font.draw(batch, "PAD: READY", 10f, vH - 118f);
         }
         font.setColor(Color.WHITE);
+    }
 
-        // Station repair message
-        if (repairMessageTimer > 0f) {
-            float alpha = Math.min(1f, repairMessageTimer / (2.5f * 0.3f));
-            font.getData().setScale(0.9f);
-            font.setColor(0.30f, 1.00f, 0.40f, alpha);
-            glyphLayout.setText(font, "STATION REPAIRED +" + (int) stationRepairAmount);
-            font.draw(batch, glyphLayout, (vW - glyphLayout.width) / 2f, vH / 2f + 50f);
-            font.setColor(Color.WHITE);
+    /** Draws the "STATION REPAIRED" pop-up message with fade-in alpha. */
+    private void drawRepairMessage(SpriteBatch batch, float vW, float vH,
+                                   float repairMessageTimer, float stationRepairAmount) {
+        float alpha = Math.min(1f, repairMessageTimer / REPAIR_FADE_DIVISOR);
+        font.getData().setScale(0.9f);
+        font.setColor(0.30f, 1.00f, 0.40f, alpha);
+        glyphLayout.setText(font, "STATION REPAIRED +" + (int) stationRepairAmount);
+        font.draw(batch, glyphLayout, (vW - glyphLayout.width) / 2f, vH / 2f + 50f);
+        font.setColor(Color.WHITE);
+    }
+
+    /**
+     * Draws the bottom-centre notification/fact toast with fade-in and fade-out alpha.
+     *
+     * @param delta seconds since last frame (used to tick the notification timer)
+     */
+    private void drawNotification(SpriteBatch batch, float vW, float delta) {
+        if (notifTimer > 0f) notifTimer -= delta;
+        if (notifText == null || notifTimer <= 0f) return;
+
+        float alpha;
+        if      (notifTimer > NOTIF_DURATION - NOTIF_FADE_IN) alpha = 1f - (notifTimer - (NOTIF_DURATION - NOTIF_FADE_IN)) / NOTIF_FADE_IN;
+        else if (notifTimer < NOTIF_FADE_OUT)                  alpha = notifTimer / NOTIF_FADE_OUT;
+        else                                                    alpha = 1f;
+
+        font.getData().setScale(1.1f);
+        font.setColor(0.95f, 0.88f, 0.55f, alpha);
+
+        StringBuilder sb1 = new StringBuilder();
+        StringBuilder sb2 = new StringBuilder();
+        for (String w : notifText.split(" ")) {
+            glyphLayout.setText(font, sb1 + w + " ");
+            if (glyphLayout.width < vW * 0.75f) sb1.append(w).append(" ");
+            else                                sb2.append(w).append(" ");
         }
+        drawCentredLine(batch, sb1.toString().trim(), vW, 72f);
+        if (sb2.length() > 0) drawCentredLine(batch, sb2.toString().trim(), vW, 50f);
+        font.setColor(Color.WHITE);
+    }
 
-        // Fact / notification popup
-        if (notifTimer > 0f) notifTimer -= Gdx.graphics.getDeltaTime();
-        if (notifText != null && notifTimer > 0f) {
-            float alpha;
-            if      (notifTimer > NOTIF_DURATION - NOTIF_FADE_IN) alpha = 1f - (notifTimer - (NOTIF_DURATION - NOTIF_FADE_IN)) / NOTIF_FADE_IN;
-            else if (notifTimer < NOTIF_FADE_OUT)                  alpha = notifTimer / NOTIF_FADE_OUT;
-            else                                                    alpha = 1f;
+    /** Draws a single line of text centred horizontally, with a 1px bold offset. */
+    private void drawCentredLine(SpriteBatch batch, String text, float vW, float y) {
+        glyphLayout.setText(font, text);
+        float x = (vW - glyphLayout.width) / 2f;
+        font.draw(batch, text, x + 1f, y);
+        font.draw(batch, text, x,       y);
+    }
 
-            font.getData().setScale(1.1f);
-            font.setColor(0.95f, 0.88f, 0.55f, alpha);
+    /**
+     * Draws the landing approach guide panel (speed and angle readouts)
+     * when the rocket is within landing altitude.
+     */
+    private void drawLandingGuide(SpriteBatch batch, ShapeRenderer sr) {
+        batch.end();
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(0f, 0f, 0f, 0.70f);
+        sr.rect(6f, LANDING_GUIDE_Y, PANEL_WIDTH, LANDING_GUIDE_HEIGHT);
+        sr.end();
+        batch.begin();
 
-            String[] words = notifText.split(" ");
-            StringBuilder sb1 = new StringBuilder(), sb2 = new StringBuilder();
-            for (String w : words) {
-                glyphLayout.setText(font, sb1 + w + " ");
-                if (glyphLayout.width < vW * 0.75f) sb1.append(w).append(" ");
-                else                                sb2.append(w).append(" ");
-            }
-            String l1 = sb1.toString().trim();
-            String l2 = sb2.toString().trim();
-            glyphLayout.setText(font, l1);
-            float l1x = (vW - glyphLayout.width) / 2f;
-            font.draw(batch, l1, l1x + 1f, 72f);  // bold: draw twice with 1px offset
-            font.draw(batch, l1, l1x,       72f);
-            if (!l2.isEmpty()) {
-                glyphLayout.setText(font, l2);
-                float l2x = (vW - glyphLayout.width) / 2f;
-                font.draw(batch, l2, l2x + 1f, 50f);
-                font.draw(batch, l2, l2x,       50f);
-            }
-            font.setColor(Color.WHITE);
-        }
+        float   speed  = Math.abs(rocket.getVy());
+        float   angle  = rocket.getRotation();
+        boolean spdOk  = speed <= RocketCollisionStrategy.MAX_SAFE_LANDING_SPEED;
+        boolean angOk  = angle >= RocketCollisionStrategy.MIN_UPRIGHT_ANGLE
+                      && angle <= RocketCollisionStrategy.MAX_UPRIGHT_ANGLE;
 
-        // Landing guide (shown when near ground)
-        if (rocket.getPosY() < 500f) {
-            batch.end();
-            sr.begin(ShapeRenderer.ShapeType.Filled);
-            sr.setColor(0f, 0f, 0f, 0.70f);
-            sr.rect(6f, 108f, 230f, 80f);
-            sr.end();
-            batch.begin();
+        font.getData().setScale(1.1f);
+        font.setColor(0.9f, 0.9f, 0.9f, 1f);
+        font.draw(batch, "LANDING APPROACH", 14f, 182f);
 
-            float speed   = Math.abs(rocket.getVy());
-            float angle   = rocket.getRotation();
-            boolean spdOk = speed <= RocketCollisionStrategy.MAX_SAFE_LANDING_SPEED;
-            boolean angOk = angle >= RocketCollisionStrategy.MIN_UPRIGHT_ANGLE
-                         && angle <= RocketCollisionStrategy.MAX_UPRIGHT_ANGLE;
+        font.getData().setScale(1.0f);
+        font.setColor(spdOk ? Color.GREEN : Color.RED);
+        font.draw(batch, "SPD: " + (int) speed + " / " + (int) RocketCollisionStrategy.MAX_SAFE_LANDING_SPEED, 14f, 160f);
+        font.setColor(angOk ? Color.GREEN : Color.RED);
+        font.draw(batch, "ANG: " + (int) angle + "  (aim 65-115)", 14f, 136f);
+        font.setColor(Color.WHITE);
+    }
 
-            font.getData().setScale(1.1f);
-            font.setColor(0.9f, 0.9f, 0.9f, 1f);
-            font.draw(batch, "LANDING APPROACH", 14f, 182f);
+    /** Returns the colour used for the orbit debris count based on how many are in flight. */
+    private Color orbitColor(int inFlight) {
+        if (inFlight > 10) return Color.RED;
+        if (inFlight >  5) return Color.YELLOW;
+        return Color.LIGHT_GRAY;
+    }
 
-            font.getData().setScale(1.0f);
-            font.setColor(spdOk ? Color.GREEN : Color.RED);
-            font.draw(batch, "SPD: " + (int) speed + " / " + (int) RocketCollisionStrategy.MAX_SAFE_LANDING_SPEED, 14f, 160f);
-
-            font.setColor(angOk ? Color.GREEN : Color.RED);
-            font.draw(batch, "ANG: " + (int) angle + "  (aim 65-115)", 14f, 136f);
-
-            font.setColor(Color.WHITE);
-        }
-
-        // Control hints
+    /** Draws the bottom control hints bar. */
+    private void drawControlHints(SpriteBatch batch) {
         font.getData().setScale(0.85f);
         font.setColor(0.70f, 0.70f, 0.70f, 1f);
         font.draw(batch, "[W / UP] Thrust    [A / D] Rotate    [E] Launch debris", 10f, 36f);
         font.draw(batch, "[Land on pad] Repair station    [ESC] Pause", 10f, 16f);
         font.setColor(Color.WHITE);
         font.getData().setScale(1f);
-
-        batch.end();
     }
 
     public void dispose() {

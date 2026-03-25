@@ -2,45 +2,42 @@ package io.github.Project.game.collisionstrategies;
 
 import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.interfaces.ICollisionStrategy;
-import io.github.Project.game.damage.DamageCalculator;
+import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.Rocket;
+import io.github.Project.game.events.GameEventListener;
 
 /**
  * PATTERN: Strategy
  *
  * Handles all collision responses for the Rocket entity:
  *
- *  "Ground"       — crash check only (no refuel; ground is not a safe pad).
- *  "EarthStation" — crash check + refuel/heal on safe landing (the real pad).
+ *  "Ground"       — crash check; safe landing does nothing.
+ *  "EarthStation" — crash check; safe landing fires onPadLanding (repairs station).
  *  "Debris"       — handled upstream in PlayScene (bowl-attach logic).
  *  "SpaceStation" / "Satellite" — safe docking, no damage.
  */
 public class RocketCollisionStrategy implements ICollisionStrategy {
 
-    // ── Landing validation ───────────────────────────────────────────────
-    private static final float MAX_SAFE_LANDING_SPEED = 100f;
-    private static final float MIN_UPRIGHT_ANGLE      = 80f;
-    private static final float MAX_UPRIGHT_ANGLE      = 100f;
-    private static final float LANDING_HEAL_AMOUNT    = 50f;
-    private static final float LANDING_REFUEL_AMOUNT  = 100f;
-    private static final String TAG_GROUND            = "Ground";
+    // ── Landing guide display thresholds (no longer used for crash logic) ──
+    public static final float MAX_SAFE_LANDING_SPEED = 160f;
+    public static final float MIN_UPRIGHT_ANGLE      = 65f;
+    public static final float MAX_UPRIGHT_ANGLE      = 115f;
+    private static final String TAG_GROUND           = "Ground";
 
     // ── Grace period (prevents immediate ground collision on takeoff) ─────
-    private static final float TAKEOFF_GRACE_PERIOD   = 4.0f;
-    private static final float SAFE_TAKEOFF_ALTITUDE  = 200f;
+    private static final float TAKEOFF_GRACE_PERIOD  = 4.0f;
+    private static final float SAFE_TAKEOFF_ALTITUDE = 200f;
 
-    private final Rocket           rocket;
-    private final DamageCalculator damageCalculator;
+    private final Rocket rocket;
 
-    private LandingCallback  landingCallback;
-    private RefuelCallback   refuelCallback;
+    private LandingCallback      landingCallback;
+    private DebrisCaughtCallback debrisCaughtCallback;
 
     private float   gracePeriodTimer = TAKEOFF_GRACE_PERIOD;
     private boolean hasLiftedOff     = false;
 
-    public RocketCollisionStrategy(Rocket rocket, DamageCalculator damageCalculator) {
-        this.rocket           = rocket;
-        this.damageCalculator = damageCalculator;
+    public RocketCollisionStrategy(Rocket rocket) {
+        this.rocket = rocket;
     }
 
     /** Must be called every frame from PlayScene to tick the grace period. */
@@ -59,66 +56,51 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
         String tag = other.getCollisionTag();
         switch (tag) {
             case TAG_GROUND:
-                if (gracePeriodTimer <= 0) handleGroundCollision();
+                if (gracePeriodTimer <= 0) handleGroundLanding();
                 break;
             case "EarthStation":
-                if (gracePeriodTimer <= 0) handleEarthStationCollision();
+                if (gracePeriodTimer <= 0) handlePadLanding();
                 break;
             case "SpaceStation":
             case "Satellite":
                 // Safe docking — no damage
                 break;
             case "Debris":
-                // Bowl-attach logic lives in PlayScene.handleCollision()
+                if (debrisCaughtCallback != null && other instanceof Debris)
+                    debrisCaughtCallback.onCaught((Debris) other);
                 break;
             default:
                 break;
         }
     }
 
-    // ── Ground: crash check only — no refuel ────────────────────────────
+    // ── Ground: always crash (not the safe pad) ──────────────────────────
 
-    private void handleGroundCollision() {
-        float landingSpeed = Math.abs(rocket.getVy());
-        float angle        = rocket.getRotation();
-        boolean safe = landingSpeed <= MAX_SAFE_LANDING_SPEED
-                    && angle >= MIN_UPRIGHT_ANGLE
-                    && angle <= MAX_UPRIGHT_ANGLE;
-
-        if (safe) {
-            if (landingCallback != null) landingCallback.onSafeLanding();
-        } else {
-            rocket.takeDamage(damageCalculator.calculateDamage(TAG_GROUND));
-            if (landingCallback != null)
-                landingCallback.onCrashLanding(landingSpeed, angle);
-        }
+    private void handleGroundLanding() {
+        if (landingCallback != null)
+            landingCallback.onCrashLanding(Math.abs(rocket.getVy()), rocket.getRotation());
     }
 
-    // ── EarthStation: safe landing = refuel + heal ───────────────────────
+    // ── EarthStation pad: always safe — no crash possible ────────────────
 
-    private void handleEarthStationCollision() {
-        float landingSpeed = Math.abs(rocket.getVy());
-        float angle        = rocket.getRotation();
-        boolean safe = landingSpeed <= MAX_SAFE_LANDING_SPEED
-                    && angle >= MIN_UPRIGHT_ANGLE
-                    && angle <= MAX_UPRIGHT_ANGLE;
+    private void handlePadLanding() {
+        if (landingCallback != null) landingCallback.onPadLanding();
+    }
 
-        if (safe) {
-            rocket.heal(LANDING_HEAL_AMOUNT);
-            rocket.refuel(LANDING_REFUEL_AMOUNT);
-            if (refuelCallback  != null) refuelCallback.onRefuel();
-            if (landingCallback != null) landingCallback.onSafeLanding();
-        } else {
-            rocket.takeDamage(damageCalculator.calculateDamage(TAG_GROUND));
-            if (landingCallback != null)
-                landingCallback.onCrashLanding(landingSpeed, angle);
-        }
+    /** Used by PlayScene to colour-code the landing guide HUD. */
+    public boolean isSafeLanding() {
+        float speed = Math.abs(rocket.getVy());
+        float angle = rocket.getRotation();
+        return speed <= MAX_SAFE_LANDING_SPEED
+            && angle >= MIN_UPRIGHT_ANGLE
+            && angle <= MAX_UPRIGHT_ANGLE;
     }
 
     // ── Callback setters ─────────────────────────────────────────────────
 
     public void setLandingCallback(LandingCallback cb) { this.landingCallback = cb; }
-    public void setRefuelCallback(RefuelCallback cb)   { this.refuelCallback  = cb; }
+
+    public void setDebrisCaughtCallback(DebrisCaughtCallback cb) { this.debrisCaughtCallback = cb; }
 
     /** Resets grace period — call this on game restart. */
     public void resetGracePeriod() {
@@ -130,11 +112,38 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
 
     public interface LandingCallback {
         void onSafeLanding();
+        void onPadLanding();
         void onCrashLanding(float speed, float angle);
     }
 
-    /** Fired when the rocket lands safely on the EarthStation pad. */
-    public interface RefuelCallback {
-        void onRefuel();
+    @FunctionalInterface
+    public interface DebrisCaughtCallback {
+        void onCaught(Debris d);
+    }
+
+    // ── Static factory ───────────────────────────────────────────────────
+
+    /**
+     * Creates a fully-wired RocketCollisionStrategy and assigns it to the rocket.
+     * Strategy wiring lives here so CollisionSetup stays thin.
+     */
+    public static RocketCollisionStrategy create(
+            Rocket rocket,
+            io.github.Project.game.factory.DebrisFactory debrisManager,
+            GameEventListener listener) {
+
+        RocketCollisionStrategy strategy = new RocketCollisionStrategy(rocket);
+
+        strategy.setLandingCallback(new LandingCallback() {
+            @Override public void onSafeLanding() { }
+            @Override public void onPadLanding()  { listener.onPadLanding(); }
+            @Override public void onCrashLanding(float speed, float angle) {
+                listener.onCrashLanding(speed, angle);
+            }
+        });
+
+        strategy.setDebrisCaughtCallback(d -> debrisManager.attachDebris(d));
+        rocket.setCollisionStrategy(strategy);
+        return strategy;
     }
 }

@@ -97,8 +97,8 @@ public class GameMaster extends Game {
     @Override
     public void dispose() {
         super.dispose();
-        if (audioManager        != null) audioManager.dispose();
-        if (sharedBatch         != null) sharedBatch.dispose();
+        if (audioManager != null) audioManager.dispose();
+        if (sharedBatch  != null) sharedBatch.dispose();
         if (sharedShapeRenderer != null) sharedShapeRenderer.dispose();
         // Reset singleton so the JVM can GC the instance in tests / hot-reload
         instance = null;

@@ -4,9 +4,7 @@ import io.github.Project.engine.entities.Entity;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.EarthStation;
-import io.github.Project.game.entities.Fuelbar;
 import io.github.Project.game.entities.Ground;
-import io.github.Project.game.entities.Moon;
 import io.github.Project.game.entities.Rocket;
 import io.github.Project.game.entities.Satellite;
 import io.github.Project.game.entities.SpaceStation;
@@ -23,16 +21,15 @@ import io.github.Project.game.entities.healthbar;
 public class EntityFactory {
 
     // ── Default sizing constants ─────────────────────────────────────────
-    private static final float ROCKET_WIDTH          = 32f;
-    private static final float ROCKET_HEIGHT         = 64f;
-    private static final float MOON_SIZE             = 200f;
+    private static final float ROCKET_WIDTH          = 48f;
+    private static final float ROCKET_HEIGHT         = 96f;
     private static final float DEBRIS_SIZE           = 50f;
     private static final float SPACE_STATION_WIDTH   = 300f;
     private static final float SPACE_STATION_HEIGHT  = 163f;
-    private static final float EARTH_STATION_WIDTH   = 150f;
-    private static final float EARTH_STATION_HEIGHT  = 75f;
-    private static final float SATELLITE_WIDTH       = 60f;
-    private static final float SATELLITE_HEIGHT      = 40f;
+    private static final float EARTH_STATION_WIDTH   = 300f;
+    private static final float EARTH_STATION_HEIGHT  = 130f;
+    private static final float SATELLITE_WIDTH       = 110f;
+    private static final float SATELLITE_HEIGHT      = 70f;
     private static final float GROUND_HEIGHT         = 100f;
     private static final float HUD_BAR_WIDTH         = 150f;
     private static final float HUD_BAR_HEIGHT        = 20f;
@@ -70,10 +67,6 @@ public class EntityFactory {
         return new Ground(x, y, width, GROUND_HEIGHT);
     }
 
-    /** Moon background object at (x, y). */
-    public Moon createMoon(float x, float y) {
-        return new Moon(x, y, MOON_SIZE, MOON_SIZE);
-    }
 
     /** Single debris piece — velocity must be set by the caller or a DebrisFactory. */
     public Debris createDebris(float x, float y) {
@@ -97,8 +90,44 @@ public class EntityFactory {
         return new healthbar(x, y, width, height);
     }
 
-    /** Standard-sized fuel bar anchored at (x, y). */
-    public Fuelbar createFuelBar(float x, float y) {
-        return new Fuelbar(x, y, HUD_BAR_WIDTH, HUD_BAR_HEIGHT);
+    // ── Satellite spawning ───────────────────────────────────────────────
+
+    /**
+     * Creates a satellite at a random valid position within the given zone,
+     * ensuring minimum distance from the station and from existing satellites.
+     * The satellite is assigned a random velocity.
+     */
+    public Satellite spawnSatellite(
+            float stationCX, float stationCY,
+            com.badlogic.gdx.utils.Array<Satellite> existing,
+            float minStationDist, float minSpacing,
+            float xMin, float xMax, float yMin, float yMax) {
+
+        float minStDistSq  = minStationDist * minStationDist;
+        float minSpacingSq = minSpacing * minSpacing;
+        float x, y;
+        int attempts = 0;
+        do {
+            x = com.badlogic.gdx.math.MathUtils.random(xMin, xMax);
+            y = com.badlogic.gdx.math.MathUtils.random(yMin, yMax);
+            float dsx = x - stationCX, dsy = y - stationCY;
+            if (dsx * dsx + dsy * dsy < minStDistSq) continue;
+            boolean tooClose = false;
+            for (int i = 0; i < existing.size; i++) {
+                Satellite ex = existing.get(i);
+                float dex = x - (ex.getPosX() + ex.getWidth()  / 2f);
+                float dey = y - (ex.getPosY() + ex.getHeight() / 2f);
+                if (dex * dex + dey * dey < minSpacingSq) { tooClose = true; break; }
+            }
+            if (!tooClose) break;
+        } while (++attempts < 32);
+
+        Satellite sat = createSatellite(x, y);
+        float speed = com.badlogic.gdx.math.MathUtils.random(8f, 22f);
+        float angle = com.badlogic.gdx.math.MathUtils.random(0f, 360f);
+        sat.setVx(com.badlogic.gdx.math.MathUtils.cosDeg(angle) * speed);
+        sat.setVy(com.badlogic.gdx.math.MathUtils.sinDeg(angle) * speed);
+        return sat;
     }
+
 }

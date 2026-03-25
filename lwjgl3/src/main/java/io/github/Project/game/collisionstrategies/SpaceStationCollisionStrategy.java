@@ -3,7 +3,9 @@ package io.github.Project.game.collisionstrategies;
 import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.interfaces.ICollisionStrategy;
 import io.github.Project.game.damage.DamageCalculator;
+import io.github.Project.game.entities.Debris;
 import io.github.Project.game.entities.SpaceStation;
+import io.github.Project.game.events.GameEventListener;
 
 /**
  * PATTERN: Strategy
@@ -23,116 +25,116 @@ public class SpaceStationCollisionStrategy implements ICollisionStrategy {
     private final SpaceStation station;
     private final DamageCalculator damageCalculator;
     
-    // Callback for critical events (scene needs to trigger game over)
     private StationEventCallback eventCallback;
-    
+    private DebrisHitCallback    debrisHitCallback;
+
     public SpaceStationCollisionStrategy(
             SpaceStation station,
             DamageCalculator damageCalculator) {
         this.station = station;
         this.damageCalculator = damageCalculator;
     }
-    
+
     @Override
     public void handleCollision(CollidableEntity self, CollidableEntity other) {
         String otherTag = other.getCollisionTag();
-        
+
         switch (otherTag) {
             case "Debris":
             case "Asteroid":
-                handleDamageCollision(otherTag);
+                handleDamageCollision(otherTag, other);
                 break;
-            
+
             case "Rocket":
-                // Rocket can safely dock with station - no damage
-                handleDocking();
+                if (eventCallback != null) eventCallback.onRocketDocked();
                 break;
-            
+
             case "Satellite":
-                // Satellites are attached to station - no collision
                 break;
-            
+
             default:
-                // Unknown collision - do nothing
                 break;
         }
     }
-    
+
     /**
-     * Handles damage from debris or asteroid collisions.
-     * 
-     * DAMAGE SCALING:
-     * - Station takes LESS damage than satellites (more robust structure)
-     * - Combined with higher max health, this makes station most durable
-     * 
-     * GAME OVER CONDITION:
-     * - When station health reaches 0 → triggers game over
-     * - This is the main fail condition for the game
+     * Handles damage from debris/asteroid collisions.
+     * Marks the debris destroyed and fires the visual-FX callback.
      */
-    private void handleDamageCollision(String collisionTag) {
-        // Check if station was alive before damage
+    private void handleDamageCollision(String collisionTag, CollidableEntity other) {
+        // Guard: don't process already-destroyed debris
+        if (other instanceof Debris && ((Debris) other).isDestroyed()) return;
+
         boolean wasAlive = station.isAlive();
-        
-        // Apply damage (station takes LESS damage than satellites)
+
         float damage = damageCalculator.calculateDamage(collisionTag);
         station.takeDamage(damage);
-        
-        // Notify scene about damage (for visual effects)
-        if (eventCallback != null) {
+
+        // Fire visual FX at the debris impact point, then destroy it
+        if (other instanceof Debris) {
+            Debris d = (Debris) other;
+            if (debrisHitCallback != null)
+                debrisHitCallback.onHit(d.getPosX() + d.getWidth() / 2f,
+                                        d.getPosY() + d.getHeight() / 2f);
+            d.setDestroyed(true);
+        }
+
+        if (eventCallback != null)
             eventCallback.onStationDamaged(damage, station.getHealthPercentage());
-        }
-        
-        // Check if this collision destroyed the station
-        if (wasAlive && !station.isAlive()) {
-            // GAME OVER CONDITION: "Game ends when Space Station health reaches 0"
-            if (eventCallback != null) {
-                eventCallback.onStationDestroyed();
-            }
-        }
+
+        if (wasAlive && !station.isAlive() && eventCallback != null)
+            eventCallback.onStationDestroyed();
     }
-    
-    /**
-     * Handles rocket docking with station.
-     * In future, this could trigger repair missions or supply delivery.
-     * For now, it's a safe collision (no damage to either).
-     */
-    private void handleDocking() {
-        if (eventCallback != null) {
-            eventCallback.onRocketDocked();
-        }
-    }
-    
-    // ── Callback setter ──────────────────────────────────────────────────────
-    
+
+    // ── Callback setters ─────────────────────────────────────────────────────
+
     public void setEventCallback(StationEventCallback callback) {
         this.eventCallback = callback;
     }
-    
-    // ── Callback interface ───────────────────────────────────────────────────
-    
-    /**
-     * Callback interface for space station events.
-     * Scene implements this to handle game-level responses.
-     */
+
+    public void setDebrisHitCallback(DebrisHitCallback callback) {
+        this.debrisHitCallback = callback;
+    }
+
+    // ── Callback interfaces ──────────────────────────────────────────────────
+
     public interface StationEventCallback {
-        /**
-         * Called when station takes damage.
-         * 
-         * @param damageAmount amount of damage applied
-         * @param healthPercentage remaining health as percentage (0.0 - 1.0)
-         */
         void onStationDamaged(float damageAmount, float healthPercentage);
-        
-        /**
-         * Called when station is destroyed (health reaches 0).
-         * Should trigger game over condition.
-         */
         void onStationDestroyed();
-        
-        /**
-         * Called when rocket docks with station.
-         * Future feature: could trigger repair or resupply missions.
-         */
         void onRocketDocked();
+    }
+
+    @FunctionalInterface
+    public interface DebrisHitCallback {
+        void onHit(float x, float y);
+    }
+
+    // ── Static factory ───────────────────────────────────────────────────
+
+    /**
+     * Creates a fully-wired SpaceStationCollisionStrategy and assigns it to the station.
+     */
+    public static SpaceStationCollisionStrategy create(
+            SpaceStation station,
+            io.github.Project.game.factory.GameObjectFactory factory,
+            GameEventListener listener) {
+
+        DamageCalculator dmg = factory.createDamageCalculator("SpaceStation");
+        SpaceStationCollisionStrategy strategy = new SpaceStationCollisionStrategy(station, dmg);
+
+        strategy.setDebrisHitCallback((x, y) -> listener.onDebrisHitFx(x, y));
+
+        strategy.setEventCallback(new StationEventCallback() {
+            @Override public void onStationDamaged(float d, float pct) {
+                listener.onCollisionSound();
+            }
+            @Override public void onStationDestroyed() {
+                listener.onStationDestroyed();
+            }
+            @Override public void onRocketDocked() { }
+        });
+
+        station.setCollisionStrategy(strategy);
+        return strategy;
     }
 }

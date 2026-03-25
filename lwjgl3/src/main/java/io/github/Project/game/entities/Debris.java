@@ -131,6 +131,7 @@ public class Debris extends CollidableEntity {
     public boolean isDestroyed()                   { return destroyed; }
 
     public boolean isHot()                         { return hot; }
+    public void    forceHot()                      { hot = true; }
 
     public boolean isAttached()                    { return attached; }
     public void    setAttached(boolean attached)   { this.attached = attached; }

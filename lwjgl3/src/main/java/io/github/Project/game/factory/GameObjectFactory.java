@@ -46,9 +46,7 @@ public class GameObjectFactory {
         return entityFactory.createGround(x, y, width);
     }
 
-    public Moon createMoon(float x, float y) {
-        return entityFactory.createMoon(x, y);
-    }
+
 
     public arrow createArrow(Entity source, Entity target) {
         return entityFactory.createArrow(source, target);
@@ -66,6 +64,16 @@ public class GameObjectFactory {
         return debrisFactory.createSatelliteDebris(x, y);
     }
 
+    /** Spawn a satellite at a valid random position with random velocity. */
+    public Satellite spawnSatellite(
+            float stationCX, float stationCY,
+            com.badlogic.gdx.utils.Array<Satellite> existing,
+            float minStationDist, float minSpacing,
+            float xMin, float xMax, float yMin, float yMax) {
+        return entityFactory.spawnSatellite(stationCX, stationCY, existing,
+            minStationDist, minSpacing, xMin, xMax, yMin, yMax);
+    }
+
     // ── HUD element creation ─────────────────────────────────────────────
 
     public healthbar createHealthBar(float x, float y) {
@@ -75,10 +83,6 @@ public class GameObjectFactory {
     /** Custom-sized health bar — e.g. the large centered station bar. */
     public healthbar createHealthBar(float x, float y, float width, float height) {
         return entityFactory.createHealthBar(x, y, width, height);
-    }
-
-    public Fuelbar createFuelBar(float x, float y) {
-        return entityFactory.createFuelBar(x, y);
     }
 
     // ── Damage calculators ───────────────────────────────────────────────

@@ -140,8 +140,16 @@ public class CollisionManager {
         return null;
     }
 
-    // only notifies listeners sound is decided by the scene
     private void handleCollision(CollisionInfo info) {
+        // Auto-dispatch: let each entity's own onCollision handle the response
+        if (info.entity1 instanceof CollidableEntity && info.entity2 instanceof CollidableEntity) {
+            CollidableEntity ce1 = (CollidableEntity) info.entity1;
+            CollidableEntity ce2 = (CollidableEntity) info.entity2;
+            ce1.onCollision(ce2);
+            ce2.onCollision(ce1);
+        }
+
+        // Notify any additional listeners (for scene-level side effects)
         for (CollisionListener listener : listeners) {
             listener.onCollision(info);
         }

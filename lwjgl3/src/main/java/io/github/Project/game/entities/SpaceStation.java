@@ -3,6 +3,7 @@ package io.github.Project.game.entities;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import io.github.Project.engine.components.HealthComponent;
 import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.interfaces.ICollisionStrategy;
@@ -26,6 +27,11 @@ public class SpaceStation extends CollidableEntity {
     // Component-based health management
     private final HealthComponent health;
     private ICollisionStrategy collisionStrategy;
+
+    // Shake state — owned by the entity, not the scene
+    private float shakeTimer     = 0f;
+    private float shakeDuration  = 0f;
+    private float shakeAmplitude = 0f;
     
     /**
      * Creates a space station with specified health.
@@ -48,21 +54,42 @@ public class SpaceStation extends CollidableEntity {
     
     /**
      * Convenience constructor with default health value.
-     * Default: 200 health (higher than rocket and satellite).
+     * Default: 100 health.
      */
     public SpaceStation(float x, float y, float width, float height) {
-        this(x, y, width, height, 200f);  // Default: high health
+        this(x, y, width, height, 100f);
     }
     
     @Override
     public void update(float deltaTime) {
+        if (shakeTimer > 0f) shakeTimer = Math.max(0f, shakeTimer - deltaTime);
         updateBounds();
     }
-    
+
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        batch.draw(texture, getPosX(), getPosY(), width, height);
+        if (shakeTimer > 0f) {
+            float t     = shakeTimer / shakeDuration;
+            float amp   = shakeAmplitude * t;
+            float phase = shakeTimer * 70f;
+            float ox    = MathUtils.sin(phase) * amp;
+            float oy    = MathUtils.cos(phase * 0.7f) * amp * 0.45f;
+            batch.draw(texture, getPosX() + ox, getPosY() + oy, width, height);
+        } else {
+            batch.draw(texture, getPosX(), getPosY(), width, height);
+        }
     }
+
+    /** Starts a screen-shake + sprite-jitter effect on this entity. */
+    public void triggerShake(float duration, float amplitude) {
+        this.shakeDuration  = duration;
+        this.shakeTimer     = duration;
+        this.shakeAmplitude = amplitude;
+    }
+
+    public float getShakeTimer()     { return shakeTimer; }
+    public float getShakeDuration()  { return shakeDuration; }
+    public float getShakeAmplitude() { return shakeAmplitude; }
     
     // ── Component accessors (delegate to HealthComponent) ───────────────────
     

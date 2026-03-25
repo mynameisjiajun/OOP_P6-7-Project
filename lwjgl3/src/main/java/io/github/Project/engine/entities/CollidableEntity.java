@@ -33,4 +33,13 @@ public abstract class CollidableEntity extends Entity {
     public void setCollisionTag(String tag) {
         this.collisionTag = tag;
     }
+
+    /**
+     * Called by CollisionManager when this entity collides with another.
+     * Override in subclasses to define collision behaviour.
+     * Default implementation does nothing.
+     */
+    public void onCollision(CollidableEntity other) {
+        // no-op — subclasses override as needed
+    }
 }

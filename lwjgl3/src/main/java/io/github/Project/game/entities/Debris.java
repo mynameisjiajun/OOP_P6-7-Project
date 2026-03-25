@@ -10,12 +10,11 @@ import io.github.Project.engine.entities.CollidableEntity;
  * Flying space debris that drifts through the space zone.
  *
  * After HOT_DEBRIS_THRESHOLD seconds of floating freely the debris
- * "heats up" — it switches to the hot texture and PlayScene begins
- * steering it toward the space station (danger mechanic).
+ * "heats up" — PlayScene begins steering it toward the space station.
  *
- * The rocket's bowl can attach up to MAX_BOWL_CAPACITY debris at once.
- * Attached debris follow the rocket nose and burn up when the rocket
- * descends through the atmosphere threshold.
+ * Visual heat level (0→1) is driven by the debris's current speed, so
+ * the faster it moves the redder it looks. Slow ambient drift = cool/grey,
+ * station-bound debris = yellow/orange, fast reentry fall = blazing red.
  *
  * Hot texture is shared across all instances (static) to avoid
  * loading a new GPU texture for every piece of debris.
@@ -41,8 +40,14 @@ public class Debris extends CollidableEntity {
         public float getStationDamageMultiplier() { return stationDamageMultiplier; }
     }
 
-    // ── How long before debris turns "hot" and drifts toward station ─────
-    public static final float HOT_DEBRIS_THRESHOLD = 28f;
+    // ── Hot threshold range — randomised per instance so debris goes hot at staggered times ──
+    private static final float HOT_THRESHOLD_MIN = 35f;
+    private static final float HOT_THRESHOLD_MAX = 55f;
+
+    // ── Speed thresholds for visual heat level (units/s) ──────────────────
+    private static final float HEAT_SPEED_MIN  = 12f;   // below this: cool
+    private static final float HEAT_SPEED_MAX  = 40f;   // at this speed: fully hot visually
+    private static final float HOT_HEAT_BONUS  = 0.30f; // added to heatLevel when hot flag fires
 
     // ── Regular debris texture variants ──────────────────────────────────
     private static final String[] DEBRIS_TEXTURES = {
@@ -60,14 +65,16 @@ public class Debris extends CollidableEntity {
     private final float width;
     private final float height;
     private float   rotation     = 0f;
-    private float   rotationSpeed;
+    private final float baseRotationSpeed;
     private boolean destroyed    = false;
     private final DebrisClass debrisClass;
 
-    // ── Hot / attached state ──────────────────────────────────────────────
-    private float   aliveTimer   = 0f;
-    private boolean hot          = false;
-    private boolean attached     = false;
+    // ── Heat / attached state ─────────────────────────────────────────────
+    private float   aliveTimer      = 0f;
+    private final float hotThreshold;   // randomised per instance (HOT_THRESHOLD_MIN..MAX)
+    private boolean hot             = false;
+    private float   heatLevel       = 0f;   // 0=cool, 1=fully hot — driven by speed
+    private boolean attached        = false;
     private boolean reentryCandidate = false;
     private float   captureCooldown = 0f;
 
@@ -90,21 +97,34 @@ public class Debris extends CollidableEntity {
         // Shared hot texture — load once, ref-count for safe disposal
         acquireHotTexture();
 
-        this.collisionTag  = "Debris";
-        this.rotationSpeed = MathUtils.random(-60f, 60f);
+        this.collisionTag      = "Debris";
+        this.baseRotationSpeed = MathUtils.random(-60f, 60f);
+        this.hotThreshold      = MathUtils.random(HOT_THRESHOLD_MIN, HOT_THRESHOLD_MAX);
     }
 
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);   // applies vx/vy → position
-        rotation += rotationSpeed * deltaTime;
+
+        // Spin speed scales with heat — hotter = more chaotic tumbling
+        rotation += baseRotationSpeed * (1f + heatLevel * 1.5f) * deltaTime;
         updateBounds();
 
-        // Track alive time only while freely floating
+        // Track alive time only while freely floating (not attached to rocket)
         if (!attached) {
             aliveTimer += deltaTime;
-            if (aliveTimer >= HOT_DEBRIS_THRESHOLD) hot = true;
+            if (aliveTimer >= hotThreshold) hot = true;
         }
+
+        // Heat level: driven by current speed + bonus when the hot flag fires
+        float speed      = (float) Math.sqrt(getVx() * getVx() + getVy() * getVy());
+        float speedHeat  = Math.max(0f, Math.min(1f,
+            (speed - HEAT_SPEED_MIN) / (HEAT_SPEED_MAX - HEAT_SPEED_MIN)));
+        float targetHeat = Math.min(1f, speedHeat + (hot ? HOT_HEAT_BONUS : 0f));
+        // Lerp smoothly — heat builds fast, cools slowly (inertia feel)
+        float lerpRate   = targetHeat > heatLevel ? 4f : 1.5f;
+        heatLevel += (targetHeat - heatLevel) * lerpRate * deltaTime;
+
         if (captureCooldown > 0f) {
             captureCooldown = Math.max(0f, captureCooldown - deltaTime);
         }
@@ -112,14 +132,38 @@ public class Debris extends CollidableEntity {
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        Texture renderTex = (hot && sharedHotTexture != null) ? sharedHotTexture : texture;
+        // Switch to hot texture once visually hot enough
+        Texture renderTex = (heatLevel >= 0.75f && sharedHotTexture != null)
+            ? sharedHotTexture : texture;
+
+        // Continuous colour gradient: white → yellow → orange → red
+        float r, g, b;
+        if (heatLevel < 0.33f) {
+            float t = heatLevel / 0.33f;
+            r = 1f; g = 1f; b = 1f - t;          // white → yellow
+        } else if (heatLevel < 0.66f) {
+            float t = (heatLevel - 0.33f) / 0.33f;
+            r = 1f; g = 1f - t * 0.55f; b = 0f;  // yellow → orange
+        } else {
+            float t = (heatLevel - 0.66f) / 0.34f;
+            r = 1f; g = 0.45f - t * 0.45f; b = 0f; // orange → red
+        }
+        batch.setColor(r, g, b, 1f);
+
+        // Gentle shimmer pulse when hot (scale oscillates ±5%)
+        float pulse = heatLevel > 0.5f
+            ? 1f + (float) Math.sin(aliveTimer * 10.0) * 0.05f * heatLevel
+            : 1f;
+
         batch.draw(renderTex,
             getPosX(), getPosY(),
             width / 2f, height / 2f,
             width, height,
-            1f, 1f, rotation,
+            pulse, pulse, rotation,
             0, 0, renderTex.getWidth(), renderTex.getHeight(),
             false, false);
+
+        batch.setColor(1f, 1f, 1f, 1f); // always reset tint
     }
 
     @Override public float getWidth()  { return width;  }
@@ -130,8 +174,9 @@ public class Debris extends CollidableEntity {
     public void    setDestroyed(boolean destroyed) { this.destroyed = destroyed; }
     public boolean isDestroyed()                   { return destroyed; }
 
-    public boolean isHot()                         { return hot; }
-    public void    forceHot()                      { hot = true; }
+    public boolean isHot()          { return hot; }
+    public float   getHeatLevel()   { return heatLevel; }
+    public void    forceHot()       { hot = true; }
 
     public boolean isAttached()                    { return attached; }
     public void    setAttached(boolean attached)   { this.attached = attached; }

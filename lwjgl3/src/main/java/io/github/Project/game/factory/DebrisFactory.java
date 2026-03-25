@@ -33,12 +33,15 @@ public class DebrisFactory {
     public  static final int   MAX_BOWL_CAPACITY             = 4;
     public  static final int   WIN_CLEAR_SCORE               = 20;
     public  static final float ATMOSPHERE_THRESHOLD          = 1400f;
-    private static final int   MAX_DEBRIS_COUNT              = 20;
+    private static final int   MAX_DEBRIS_COUNT              = 28;
     private static final float DEBRIS_SPAWN_INTERVAL         = 10f;
-    private static final float HOT_DEBRIS_SPEED              = 30f;
+    private static final float HOT_DEBRIS_SPEED              = 80f;
+    private static final float HOT_STEER_STRENGTH            = 0.3f;   // steering lerp rate
+    private static final float REENTRY_GRAVITY               = 120f;  // downward pull on launched debris (units/s²)
     private static final float STATION_WARN_RADIUS           = 600f;
-    private static final float DEBRIS_SPAWN_MIN_Y_OFFSET     = 700f;
-    private static final float DEBRIS_SPAWN_MAX_Y_OFFSET     = 3700f;
+    private static final float DEBRIS_SPAWN_MIN_Y_OFFSET     = 1200f; // raised so debris falls into station zone
+    private static final float DEBRIS_SPAWN_MAX_Y_OFFSET     = 6000f; // wider range for varied fall distances
+    private static final float COLD_DEBRIS_EVICT_Y           = 3800f; // below this, cold debris is respawned above
     private static final float DEBRIS_MIN_STATION_SPAWN_DIST = 450f;
     private static final float SPACE_ZONE_START              = 4000f;
     private static final int   KESSLER_TRIGGER_SCORE         = 13;
@@ -142,8 +145,24 @@ public class DebrisFactory {
                 continue;
             }
 
-            // Hot-debris steering toward station
-            if (!d.isReentryCandidate() && d.isHot()) {
+            // Reentry gravity — pulls launched debris down toward atmosphere
+            if (d.isReentryCandidate()) {
+                d.setVy(d.getVy() - REENTRY_GRAVITY * delta);
+                continue; // skip zone eviction and steering for launched debris
+            }
+
+            // Evict cold debris that has drifted below the space zone — respawn above
+            if (!d.isHot() && d.getPosY() < COLD_DEBRIS_EVICT_Y) {
+                flying.removeIndex(i);
+                if (onEntityRemoved != null) onEntityRemoved.apply(d);
+                d.dispose();
+                spawnOne();
+                i--;
+                continue;
+            }
+
+            // Hot debris steering toward station (gradual lerp — not instant snap)
+            if (d.isHot()) {
                 if (!hotDebrisNotified) {
                     hotDebrisNotified = true;
                     if (onFirstHotDebris != null) onFirstHotDebris.run();
@@ -152,8 +171,10 @@ public class DebrisFactory {
                 float dy   = stationCY - (d.getPosY() + d.getHeight() / 2f);
                 float dist = (float) Math.sqrt(dx * dx + dy * dy);
                 if (dist > 1f) {
-                    d.setVx(dx / dist * HOT_DEBRIS_SPEED);
-                    d.setVy(dy / dist * HOT_DEBRIS_SPEED);
+                    float targetVx = dx / dist * HOT_DEBRIS_SPEED;
+                    float targetVy = dy / dist * HOT_DEBRIS_SPEED;
+                    d.setVx(d.getVx() + (targetVx - d.getVx()) * HOT_STEER_STRENGTH * delta);
+                    d.setVy(d.getVy() + (targetVy - d.getVy()) * HOT_STEER_STRENGTH * delta);
                 }
                 if (dist < STATION_WARN_RADIUS) stationWarning = true;
             }
@@ -261,7 +282,8 @@ public class DebrisFactory {
         float speed = MathUtils.random(10f, 30f);
         float angle = MathUtils.random(0f, 360f);
         debris.setVx(MathUtils.cosDeg(angle) * speed);
-        debris.setVy(MathUtils.sinDeg(angle) * speed);
+        // Downward bias so debris naturally drifts toward the station zone and builds heat
+        debris.setVy(MathUtils.sinDeg(angle) * speed - MathUtils.random(8f, 18f));
         return debris;
     }
 

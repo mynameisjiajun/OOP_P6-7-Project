@@ -68,6 +68,9 @@ public class SpaceStationCollisionStrategy implements ICollisionStrategy {
         boolean wasAlive = station.isAlive();
 
         float damage = damageCalculator.calculateDamage(collisionTag);
+        if (other instanceof Debris) {
+            damage *= ((Debris) other).getStationDamageMultiplier();
+        }
         station.takeDamage(damage);
 
         // Fire visual FX at the debris impact point, then destroy it

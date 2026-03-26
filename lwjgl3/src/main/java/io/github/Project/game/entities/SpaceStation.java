@@ -8,40 +8,23 @@ import io.github.Project.engine.components.HealthComponent;
 import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.interfaces.ICollisionStrategy;
 
-/**
- * REFACTORED: Now uses Component Pattern for health management.
- * 
- * GAME MECHANIC: "Space station should have higher health than both rocket and satellite"
- * - Default max health: 200 (vs Rocket: 100, Satellite: 50)
- * - Takes LESS damage per hit (via SpaceStationDamageCalculator)
- * - Most durable structure in the game
- * 
- * GAME OVER CONDITION: "Game ends when Space Station health reaches 0"
- */
+// space station entity (main objective to protect)
 public class SpaceStation extends CollidableEntity {
     
     protected Texture texture;
     private final float width;
     private final float height;
     
-    // Component-based health management
+    // health component (handles damage and healing)
     private final HealthComponent health;
     private ICollisionStrategy collisionStrategy;
 
-    // Shake state — owned by the entity, not the scene
+    // shake effect state
     private float shakeTimer     = 0f;
     private float shakeDuration  = 0f;
     private float shakeAmplitude = 0f;
     
-    /**
-     * Creates a space station with specified health.
-     * 
-     * @param x X position
-     * @param y Y position
-     * @param width width
-     * @param height height
-     * @param maxHealth maximum health (default: 200)
-     */
+    // create station with custom max health
     public SpaceStation(float x, float y, float width, float height, float maxHealth) {
         super(x, y, 0, width, height);
         this.texture = new Texture("images/entities/Space_Station.png");
@@ -52,22 +35,21 @@ public class SpaceStation extends CollidableEntity {
         this.collisionTag = "SpaceStation";
     }
     
-    /**
-     * Convenience constructor with default health value.
-     * Default: 100 health.
-     */
+    // create station with default health
     public SpaceStation(float x, float y, float width, float height) {
         this(x, y, width, height, 100f);
     }
     
     @Override
     public void update(float deltaTime) {
+        // update shake effect timer
         if (shakeTimer > 0f) shakeTimer = Math.max(0f, shakeTimer - deltaTime);
         updateBounds();
     }
 
     @Override
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
+        // apply shake effect if active
         if (shakeTimer > 0f) {
             float t     = shakeTimer / shakeDuration;
             float amp   = shakeAmplitude * t;
@@ -80,7 +62,7 @@ public class SpaceStation extends CollidableEntity {
         }
     }
 
-    /** Starts a screen-shake + sprite-jitter effect on this entity. */
+    // trigger shake animation effect
     public void triggerShake(float duration, float amplitude) {
         this.shakeDuration  = duration;
         this.shakeTimer     = duration;
@@ -91,81 +73,58 @@ public class SpaceStation extends CollidableEntity {
     public float getShakeDuration()  { return shakeDuration; }
     public float getShakeAmplitude() { return shakeAmplitude; }
     
-    // ── Component accessors (delegate to HealthComponent) ───────────────────
+    // health operations
     
-    /**
-     * Applies damage to the station.
-     * Delegates to HealthComponent.
-     */
+    // apply damage to station
     public void takeDamage(float amount) {
         health.takeDamage(amount);
     }
     
-    /**
-     * Heals the station (e.g., repair mission).
-     * Delegates to HealthComponent.
-     */
+    // heal station
     public void heal(float amount) {
         health.heal(amount);
     }
 
-    /** Fully restores station health — called on game restart. */
+    // fully restore health
     public void fullyHeal() {
         health.fullyHeal();
     }
     
-    /**
-     * Checks if station is still operational (health > 0).
-     * 
-     * GAME OVER TRIGGER: When this returns false, game should end.
-     */
+    // check if station is still alive
     public boolean isAlive() {
         return health.isAlive();
     }
     
-    /**
-     * Gets health percentage for UI display.
-     * Returns value between 0.0 (destroyed) and 1.0 (full health).
-     */
+    // get health percentage for UI
     public float getHealthPercentage() {
         return health.getHealthPercentage();
     }
     
-    /**
-     * Gets current health value.
-     */
+    // get current health value
     public float getCurrentHealth() {
         return health.getCurrentHealth();
     }
     
-    /**
-     * Gets maximum health value.
-     */
+    // get maximum health value
     public float getMaxHealth() {
         return health.getMaxHealth();
     }
     
-    // ── Collision strategy ───────────────────────────────────────────────────
+    // collision strategy
     
-    /**
-     * Sets the collision strategy for this station.
-     * Allows strategy to be changed at runtime (Strategy Pattern).
-     */
+    // set collision handling strategy
     public void setCollisionStrategy(ICollisionStrategy strategy) {
         this.collisionStrategy = strategy;
     }
     
-    /**
-     * Handles collision using the assigned strategy.
-     * Delegates collision response to strategy (Open/Closed Principle).
-     */
+    // handle collision using strategy
     public void onCollision(CollidableEntity other) {
         if (collisionStrategy != null) {
             collisionStrategy.handleCollision(this, other);
         }
     }
     
-    // ── Getters ──────────────────────────────────────────────────────────────
+    // getters
     
     @Override
     public float getWidth() {
@@ -181,12 +140,13 @@ public class SpaceStation extends CollidableEntity {
         return health;
     }
     
-    // ── Cleanup ──────────────────────────────────────────────────────────────
+    // cleanup
     
     public void dispose() {
         if (texture != null) texture.dispose();
     }
 
+    // check if station is destroyed
     public boolean isDestroyed() {
         return !this.health.isAlive();
     }

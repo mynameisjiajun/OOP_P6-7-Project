@@ -18,34 +18,33 @@ public class InputMovement extends InputAdapter {
     private int mouseX;
     private int mouseY;
 
-    // ── Getters ──────────────────────────────────────────────────────────
+    // getters
 
-    /** @return true while the thrust/up key is held */
+    // true while thrust/up key is held
     public boolean isKeyUp()      { return keyUp; }
 
-    /** @return true while the brake/down key is held */
+    // true while down key is held
     public boolean isKeyDown()    { return keyDown; }
 
-    /** @return true while the rotate-left key is held */
+    // true while left key is held
     public boolean isKeyLeft()    { return keyLeft; }
 
-    /** @return true while the rotate-right key is held */
+    // true while right key is held
     public boolean isKeyRight()   { return keyRight; }
 
-    /** @return true while the primary mouse button is held */
+    // true while left mouse button is held
     public boolean isMouseLeft()  { return mouseLeft; }
 
-    /** @return true while the secondary mouse button is held */
+    // true while right mouse button is held
     public boolean isMouseRight() { return mouseRight; }
 
-    /** @return current mouse X in screen coordinates */
+    // current mouse x position
     public int getMouseX()        { return mouseX; }
 
-    /** @return current mouse Y in screen coordinates */
+    // current mouse y position
     public int getMouseY()        { return mouseY; }
 
-    // Called when a key is pressed down.
-
+    // key pressed
     @Override
     public boolean keyDown(int keycode) {
         switch (keycode) {
@@ -62,7 +61,7 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    // Called when a key is released.
+    // key released
     @Override
     public boolean keyUp(int keycode) {
         switch (keycode) {
@@ -79,11 +78,9 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    // Called when a mouse button is pressed.
-
+    // mouse button pressed
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // Update the coordinates of the click
         this.mouseX = screenX;
         this.mouseY = screenY;
 
@@ -92,10 +89,9 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    // Called when a mouse button is released.
+    // mouse button released
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        // Update coordinates (optional, but good for drag release logic)
         this.mouseX = screenX;
         this.mouseY = screenY;
 
@@ -104,19 +100,15 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    /**
-     * Updates mouse coordinates without clicking (Hovering).
-     * Required if you want to track the mouse while it moves.
-     */
+    // update mouse position while moving
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         this.mouseX = screenX;
         this.mouseY = screenY;
         return true;
     }
-    
-    // Updates mouse coordinates while clicking and dragging.
 
+    // update mouse position while dragging
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         this.mouseX = screenX;
@@ -124,7 +116,7 @@ public class InputMovement extends InputAdapter {
         return true;
     }
 
-    // Reset all flags (useful for game over or scene changes)
+    // reset all input flags
     public void reset() {
         keyUp = false;
         keyDown = false;

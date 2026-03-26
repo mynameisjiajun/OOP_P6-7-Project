@@ -55,7 +55,7 @@ public abstract class StarBackgroundScene extends Scene {
         this.starCount  = starCount;
     }
 
-    // ── Template method ──────────────────────────────────────────────────
+    // Template method 
 
     @Override
     public void show() {
@@ -81,7 +81,7 @@ public abstract class StarBackgroundScene extends Scene {
     /** Subclasses create their labels, buttons, and table layout here. */
     protected abstract void buildUI();
 
-    // ── Shared helpers ───────────────────────────────────────────────────
+    // Shared helpers 
 
     /** Add a label style to the skin with the given name and colour. */
     protected void addLabelStyle(String name, Color color) {
@@ -91,7 +91,7 @@ public abstract class StarBackgroundScene extends Scene {
         skin.add(name, style);
     }
 
-    // ── Rendering ────────────────────────────────────────────────────────
+    // Rendering 
 
     @Override
     public void render(float delta) {
@@ -110,7 +110,7 @@ public abstract class StarBackgroundScene extends Scene {
         stage.draw();
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────────────
+    // Lifecycle
 
     @Override
     public void resize(int width, int height) {
@@ -131,7 +131,7 @@ public abstract class StarBackgroundScene extends Scene {
         if (skin  != null) skin.dispose();
     }
 
-    // ── Star generation ──────────────────────────────────────────────────
+    // Star generation
 
     private float[] generateStars(int w, int h) {
         Random rng = new Random(starSeed);

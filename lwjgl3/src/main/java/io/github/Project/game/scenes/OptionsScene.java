@@ -12,10 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.Project.engine.core.GameMaster;
 import io.github.Project.game.ui.UISkinFactory;
 
-/**
- * Options/Settings scene — space-themed.
- * Extends the base skin with a slider style for volume control.
- */
+// options scene
 public class OptionsScene extends StarBackgroundScene {
 
     public enum BackTarget { MAIN_MENU, PAUSE_MENU }
@@ -40,12 +37,13 @@ public class OptionsScene extends StarBackgroundScene {
 
     @Override
     protected void buildUI() {
-        // OptionsScene also needs the slider style
+        // add slider style for volume control
         UISkinFactory.addSliderStyle(skin, ACCENT);
 
         float currentVolume = gameMaster.getAudioManager().getVolume();
         final Label volumeLabel = new Label("Volume: " + (int)(currentVolume * 100) + "%", skin);
 
+        // volume slider
         Slider volumeSlider = new Slider(0f, 1f, 0.01f, false, skin);
         volumeSlider.setValue(currentVolume);
         volumeSlider.addListener(new ChangeListener() {
@@ -56,6 +54,7 @@ public class OptionsScene extends StarBackgroundScene {
             }
         });
 
+        // mute toggle button
         final TextButton muteButton = new TextButton(gameMaster.getAudioManager().isMuted() ? "UNMUTE" : "MUTE", skin);
         muteButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
@@ -65,6 +64,7 @@ public class OptionsScene extends StarBackgroundScene {
             }
         });
 
+        // back button
         TextButton backButton = new TextButton("BACK", skin);
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
@@ -80,6 +80,7 @@ public class OptionsScene extends StarBackgroundScene {
         Label titleLabel = new Label("OPTIONS", skin, "title");
         titleLabel.setFontScale(2f);
 
+        // layout table
         Table table = new Table();
         table.setFillParent(true);
         table.center();

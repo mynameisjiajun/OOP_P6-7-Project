@@ -3,69 +3,48 @@ package io.github.Project.engine.managers;
 import io.github.Project.engine.core.GameMaster;
 import io.github.Project.engine.core.Scene;
 
-/**
- * Manages game scenes/screens using LibGDX's built-in screen system.
- * Provides convenient helper methods for scene transitions.
- * Tracks previous scene to allow resuming without losing state.
- */
+// handles scene switching and pause/resume flow
 public class SceneManager {
+
     private final GameMaster gameMaster;
-    private Scene previousScene;  // Track scene before pause/menu
-    
-    /**
-     * Creates a new SceneManager.
-     */
+
+    // stores scene before pause (used for resume)
+    private Scene previousScene;
+
     public SceneManager(GameMaster gameMaster) {
         this.gameMaster = gameMaster;
         this.previousScene = null;
     }
-    
-    public GameMaster getGameMaster() {   
+
+    public GameMaster getGameMaster() {
         return gameMaster;
     }
-    
-    /**
-     * Sets the current active scene using LibGDX's screen system.
-     * @param scene The scene to activate
-     */
+
+    // switch to a new scene
     public void setState(Scene scene) {
         gameMaster.setScreen(scene);
     }
-    
-    /**
-     * Pauses the current scene and switches to a new scene (like pause menu).
-     * Saves the current scene so it can be resumed later without losing state.
-     * @param pauseScene The pause/overlay scene to show
-     */
+
+    // save current scene and switch (used for pause/menu)
     public void pauseAndSetState(Scene pauseScene) {
         this.previousScene = getCurrentScene();
         gameMaster.setScreen(pauseScene);
     }
-    
-    /**
-     * Resumes the previously paused scene.
-     * Returns to the scene that was active before pause was called.
-     * If no previous scene exists, does nothing.
-     */
+
+    // return to previously paused scene
     public void resumePreviousScene() {
         if (previousScene != null) {
             gameMaster.setScreen(previousScene);
-            previousScene = null;  // Clear after resuming
+            previousScene = null;
         }
     }
-    
-    /**
-     * Gets the current active scene.
-     * @return The current scene
-     */
+
+    // get current active scene
     public Scene getCurrentScene() {
         return (Scene) gameMaster.getScreen();
     }
-    
-    /**
-     * Gets the previously paused scene (if any).
-     * @return The previous scene or null
-     */
+
+    // get stored previous scene (if any)
     public Scene getPreviousScene() {
         return previousScene;
     }

@@ -6,77 +6,48 @@ import io.github.Project.engine.entities.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Manages all game entities.
- * Handles entity registration, updates, and removal.
- * Entities are scene-scoped but globally tracked here.
- */
-
+// manages all entities in the game (add, update, render, remove)
 public class EntityManager {
+
+    // stores all active entities
     private final List<Entity> entities;
-    
-    /**
-     * Creates new EntityManager.
-     */
-    
+
     public EntityManager() {
         this.entities = new ArrayList<>();
     }
-    
-    /**
-     * Adds entity to the manager.
-     */
-     
+
+    // add entity if not null and not already added
     public void addEntity(Entity entity) {
         if (entity != null && !entities.contains(entity)) {
             entities.add(entity);
         }
     }
-    
-    /**
-     * Removes entity from the manager.
-     */
-     
+
+    // remove entity from manager
     public void removeEntity(Entity entity) {
         entities.remove(entity);
     }
-    
-    /**
-     * Gets all entities.
-     * @return List of all entities (used by scenes for collision checking)
-     */
-     
+
+    // returns copy of entity list (prevents external modification)
     public List<Entity> getEntities() {
-        return new ArrayList<>(entities); // Return copy for safety
+        return new ArrayList<>(entities);
     }
-    
-    /**
-     * Updates all entities.(called by scenes)
-     * @param deltaTime The time elapsed since the last frame
-     */
-     
+
+    // update all entities every frame
     public void update(float deltaTime) {
         for (Entity entity : entities) {
             entity.update(deltaTime);
         }
     }
-    
-    /**
-     * Renders all entities using shared renderers(called by scenes).
-     * @param batch Shared SpriteBatch for texture-based entities
-     * @param shapeRenderer Shared ShapeRenderer for shape-based entities
-     */
-     
+
+    // render all entities using shared renderers
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
         for (Entity entity : entities) {
             entity.render(batch, shapeRenderer);
         }
     }
-    
-    /**
-     * Clears all entities.
-     */
-   
+
+    // clears all entities (used when changing scenes)
     public void clear() {
         entities.clear();
     }

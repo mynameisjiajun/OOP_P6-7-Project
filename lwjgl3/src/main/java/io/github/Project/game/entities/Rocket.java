@@ -10,16 +10,12 @@ import io.github.Project.engine.entities.CollidableEntity;
 import io.github.Project.engine.input.InputMovement;
 import io.github.Project.engine.interfaces.ICollisionStrategy;
 
-/**
- * Player-controlled rocket.
- *
- * Uses Component Pattern for health management and Strategy Pattern for collision.
- */
+//player controlled rocket
 public class Rocket extends CollidableEntity {
 
     private ICollisionStrategy collisionStrategy;
 
-    // ── Rendering ────────────────────────────────────────────────────────────
+    // Rendering
     private Texture staticTexture;
     private static final int FRAME_COUNT = 10;
     private static final float FRAME_DURATION = 1f / 12f;
@@ -27,7 +23,7 @@ public class Rocket extends CollidableEntity {
     private Animation<TextureRegion> thrustAnimation;
     private float animStateTime = 0f;
 
-    // ── Physics and dimensions ───────────────────────────────────────────────
+    // Physics and dimensions 
     private final float drawFlame;
     private final float drawH;
     private final float originX;
@@ -93,7 +89,7 @@ public class Rocket extends CollidableEntity {
         }
     }
 
-    // ── Collision strategy ───────────────────────────────────────────────────
+    // Collision strategy 
 
     public void setCollisionStrategy(ICollisionStrategy strategy) {
         this.collisionStrategy = strategy;
@@ -109,7 +105,7 @@ public class Rocket extends CollidableEntity {
         }
     }
 
-    // ── Getters/Setters ──────────────────────────────────────────────────────
+    //  Getters/Setters
 
     @Override public float getWidth()  { return width; }
     @Override public float getHeight() { return height; }
@@ -118,7 +114,7 @@ public class Rocket extends CollidableEntity {
     public void setRotation(float r)   { this.rotation = r; }
     public InputMovement getInput()    { return input; }
 
-    // ── Cleanup ──────────────────────────────────────────────────────────────
+    // Cleanup
 
     public void dispose() {
         if (staticTexture != null) staticTexture.dispose();

@@ -9,9 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.Project.engine.core.GameMaster;
 import io.github.Project.engine.core.Scene;
 
-/**
- * Pause menu scene — space-themed overlay.
- */
+// pause menu scene
 public class PauseScene extends StarBackgroundScene {
 
     private static final Color BG    = new Color(0.00f, 0.00f, 0.04f, 1f);
@@ -26,6 +24,7 @@ public class PauseScene extends StarBackgroundScene {
 
     @Override
     public void show() {
+        // pause current music before showing pause menu
         gameMaster.getAudioManager().pauseMusic();
         super.show();
     }
@@ -35,6 +34,7 @@ public class PauseScene extends StarBackgroundScene {
         Label titleLabel = new Label("// PAUSED //", skin, "title");
         titleLabel.setFontScale(2f);
 
+        // pause menu buttons
         TextButton resumeButton   = new TextButton("RESUME",    skin);
         TextButton optionsButton  = new TextButton("OPTIONS",   skin);
         TextButton mainMenuButton = new TextButton("MAIN MENU", skin);
@@ -46,6 +46,7 @@ public class PauseScene extends StarBackgroundScene {
                 gameMaster.getSceneManager().resumePreviousScene();
             }
         });
+
         optionsButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
@@ -53,6 +54,7 @@ public class PauseScene extends StarBackgroundScene {
                     new OptionsScene(gameMaster, OptionsScene.BackTarget.PAUSE_MENU));
             }
         });
+
         mainMenuButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
@@ -62,6 +64,7 @@ public class PauseScene extends StarBackgroundScene {
             }
         });
 
+        // layout table
         Table table = new Table();
         table.setFillParent(true);
         table.center();

@@ -9,11 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.Project.engine.core.GameMaster;
 
-/**
- * Main menu scene — space-themed entry screen.
- */
+//main menu scene (entry screen)
 public class MainMenuScene extends StarBackgroundScene {
-
+	//background + UI colours
     private static final Color BG    = new Color(0.02f, 0.02f, 0.08f, 1f);
     private static final Color UP    = new Color(0.08f, 0.12f, 0.28f, 1f);
     private static final Color OVER  = new Color(0.80f, 0.40f, 0.05f, 1f);
@@ -26,16 +24,20 @@ public class MainMenuScene extends StarBackgroundScene {
 
     @Override
     public void show() {
+    	// reset gameplay audio 
+        gameMaster.getAudioManager().stopRocketLoop();
         gameMaster.getAudioManager().startDefaultBackgroundMusic();
         super.show();
     }
 
     @Override
     protected void buildUI() {
+    	//title + subtitle
         Label titleLabel = new Label("ROCKET JOURNEY", skin, "title");
         titleLabel.setFontScale(2.5f);
         Label subLabel = new Label("Protect the Space Station!", skin);
-
+        
+        //menu buttons
         TextButton playButton    = new TextButton("LAUNCH",  skin);
         TextButton optionsButton = new TextButton("OPTIONS", skin);
         TextButton exitButton    = new TextButton("EXIT",    skin);
@@ -59,7 +61,7 @@ public class MainMenuScene extends StarBackgroundScene {
                 Gdx.app.exit();
             }
         });
-
+        //Layout table 
         Table table = new Table();
         table.setFillParent(true);
         table.center();

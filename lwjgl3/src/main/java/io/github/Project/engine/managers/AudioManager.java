@@ -19,6 +19,7 @@ public class AudioManager implements AudioOutput {
     public static final String SFX_ROCKET = "audio/sfx/rocket.wav";
     public static final String SFX_REFUEL = "audio/sfx/refuel.wav";
     public static final String SFX_WIN = "audio/sfx/win.wav";
+    public static final String SFX_GAME_OVER = "audio/sfx/gameover.wav";
 
     private final ObjectMap<String, Sound> soundCache = new ObjectMap<>();
     private final ObjectMap<String, Music> musicCache = new ObjectMap<>();
@@ -133,6 +134,9 @@ public class AudioManager implements AudioOutput {
     public void playWinSound() {
         playSoundEffect(SFX_WIN);
     }
+    public void playGameOverSound() {
+        playSoundEffect(SFX_GAME_OVER);
+    }
 
     // starts rocket sound only once even if called every frame
     public void playRocketLoop() {
@@ -221,9 +225,6 @@ public class AudioManager implements AudioOutput {
         musicCache.clear();
     }
 
-    /**
-     * Checks if the game over sound is currently playing.
-     */
     public boolean isGameOverSoundPlaying() {
         // Placeholder logic: Since there is no game-over sound tracked yet, safely return false.
         return false;

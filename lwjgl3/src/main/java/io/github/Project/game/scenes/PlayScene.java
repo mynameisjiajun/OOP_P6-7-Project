@@ -27,36 +27,25 @@ import io.github.Project.game.rendering.WorldRenderer;
 import io.github.Project.game.ui.HUDRenderer;
 
 import java.util.List;
+//main gameplay scene
+//core mechanics: collect, attach, launch and clear debris
+//earth landing: refuel and heal
+//win condition: clear enough debris
+//lose condition: space station destroyed
+//handled by WorldRenderer, HUDRenderer, DebrisFactory
 
-/**
- * Main gameplay scene.
- *
- * Mechanics:
- *  - Fly up into the space zone where 20 debris float freely.
- *  - Debris that has been floating > 28 s turns "hot" and drifts toward
- *    the space station (station warning flashes red/orange).
- *  - Fly the rocket's bowl into debris to attach it (max 4 at once).
- *  - Press E to launch attached debris in the rocket's facing direction.
- *  - Descend below ATMOSPHERE_THRESHOLD (1400 m) with attached debris —
- *    they burn up and are counted as cleared.
- *  - Land on the EarthStation pad to refuel and heal.
- *  - Clear 20 points of debris to win. Station health reaching 0 = game over.
- *
- * Rendering and debris management are delegated to WorldRenderer,
- * HUDRenderer and DebrisFactory.
- */
 public class PlayScene extends Scene {
 
-    // ── Space station placement ────────────────────────────────────────
+    // Space station placement
     private static final float STATION_X = -150f;
     private static final float STATION_Y = 4500f;
     private static final float STATION_W = 300f;
     private static final float STATION_H = 163f;
 
-    // ── Earth station (landing pad) ────────────────────────────────────
+    // Earth station (landing pad) 
     private static final float EARTH_PAD_W = 300f;
 
-    // ── Satellite system ───────────────────────────────────────────────
+    // Satellite system 
     private static final int   SATELLITE_COUNT            = 7;
     private static final float SATELLITE_ZONE_MIN_Y       = 5000f;
     private static final float SATELLITE_ZONE_MAX_Y       = 7000f;
@@ -65,43 +54,43 @@ public class PlayScene extends Scene {
     private static final float SATELLITE_MIN_STATION_DIST = 700f;
     private static final float SATELLITE_MIN_SPACING      = 400f;
 
-    // ── Gameplay tuning ────────────────────────────────────────────────
+    // Gameplay tuning 
     private static final float STATION_REPAIR_AMOUNT  = 20f;
     private static final float REPAIR_COOLDOWN        = 12f;
     private static final float REPAIR_MSG_DURATION    = 2.5f;
 
-    // ── World boundary ─────────────────────────────────────────────────
+    // World boundary 
     private static final float WORLD_HALF_WIDTH = 1200f;
 
-    // ── Cameras ────────────────────────────────────────────────────────
+    // Cameras 
     private OrthographicCamera gameCamera;
     private OrthographicCamera hudCamera;
 
-    // ── Game entities ──────────────────────────────────────────────────
+    // Game entities
     private Rocket       rocket;
     private SpaceStation spaceStation;
     private EarthStation earthStation;
     private Array<Satellite> satellites;
 
-    // ── Strategies ────────────────────────────────────────────────────
+    // Strategies 
     private RocketMovementStrategy  rocketMovementStrategy;
     private RocketCollisionStrategy rocketStrategy;
 
-    // ── Navigation arrow ──────────────────────────────────────────────
+    // Navigation arrow 
     private Arrow navArrow;
 
-    // ── Factory ────────────────────────────────────────────────────────
+    // Factory 
     private GameObjectFactory factory;
 
-    // ── Managers ───────────────────────────────────────────────────────
+    // Managers 
     private DebrisFactory debrisManager;
     private WorldRenderer worldRenderer;
     private HUDRenderer   hudRenderer;
 
-    // ── Collision listener ────────────────────────────────────────────
+    // Collision listener 
     private GameEventListener gameEventListener;
 
-    // ── Game state ─────────────────────────────────────────────────────
+    // Game state 
     private boolean gameWon             = false;
     private boolean gameOver            = false;
     private String  gameOverReason      = "Space station destroyed";
@@ -112,21 +101,16 @@ public class PlayScene extends Scene {
         super(gameMaster);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    //  SHOW
-    // ──────────────────────────────────────────────────────────────────
     @Override
     public void show() {
         gameMaster.getInputMovement().reset();
 
-        // Pause / resume — just un-pause, keep all state intact
         if (gameCamera != null) {
             isPaused = false;
             Gdx.input.setInputProcessor(gameMaster.getInputMovement());
             return;
         }
 
-        // ── One-time setup ─────────────────────────────────────────────
         factory = new GameObjectFactory(gameMaster.getInputMovement());
 
         initCameras();
@@ -219,11 +203,6 @@ public class PlayScene extends Scene {
         return new PlaySceneEventHandler();
     }
 
-
-
-    // ──────────────────────────────────────────────────────────────────
-    //  RENDER
-    // ──────────────────────────────────────────────────────────────────
     @Override
     public void render(float delta) {
         gameMaster.getIoManager().update();
@@ -249,13 +228,11 @@ public class PlayScene extends Scene {
         gameMaster.getMovementManager().updateMovements(delta);
         rocketStrategy.update(delta);
 
-        // Horizontal boundary clamp
         float left  = -WORLD_HALF_WIDTH;
         float right =  WORLD_HALF_WIDTH - rocket.getWidth();
         if (rocket.getPosX() < left)  { rocket.setPosX(left);  rocket.setVx(0f); }
         if (rocket.getPosX() > right) { rocket.setPosX(right); rocket.setVx(0f); }
 
-        // Auto-level assist near ground
         if (rocket.getPosY() < 450f) {
             float rot  = rocket.getRotation();
             float diff = 90f - rot;
@@ -267,7 +244,6 @@ public class PlayScene extends Scene {
         debrisManager.update(delta);
         worldRenderer.update(delta);
 
-        // E key: release bowl in facing direction
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             debrisManager.releaseAttachedInFacingDirection();
         }
@@ -275,7 +251,6 @@ public class PlayScene extends Scene {
         gameMaster.getCollisionManager().checkCollisions(
             gameMaster.getEntityManager().getEntities());
 
-        // Timers
         if (repairMessageTimer  > 0f) repairMessageTimer  -= delta;
         if (repairCooldownTimer > 0f) repairCooldownTimer -= delta;
     }
@@ -297,6 +272,8 @@ public class PlayScene extends Scene {
     }
 
     private void handleGameEnd() {
+        gameMaster.getAudioManager().stopRocketLoop();
+
         if (gameWon) {
             gameMaster.getSceneManager().setState(
                 new WinScene(gameMaster, debrisManager.getDebrisCollected(),
@@ -311,7 +288,6 @@ public class PlayScene extends Scene {
     private void drawScene(float delta) {
         worldRenderer.draw(delta, gameCamera);
 
-        // Nav arrow in world space — after camera update inside draw()
         com.badlogic.gdx.graphics.glutils.ShapeRenderer sr = gameMaster.getSharedShapeRenderer();
         sr.setProjectionMatrix(gameCamera.combined);
         Gdx.gl.glEnable(com.badlogic.gdx.graphics.GL20.GL_BLEND);
@@ -323,11 +299,6 @@ public class PlayScene extends Scene {
         hudRenderer.draw(hudCamera, repairCooldownTimer, repairMessageTimer, STATION_REPAIR_AMOUNT);
     }
 
-
-
-    // ──────────────────────────────────────────────────────────────────
-    //  SATELLITE SPAWNING
-    // ──────────────────────────────────────────────────────────────────
     private void spawnOneSatellite() {
         float stationCX = STATION_X + STATION_W / 2f;
         float stationCY = STATION_Y + STATION_H / 2f;
@@ -343,9 +314,6 @@ public class PlayScene extends Scene {
         addSceneEntity(sat);
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    //  LIFECYCLE
-    // ──────────────────────────────────────────────────────────────────
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
@@ -388,15 +356,6 @@ public class PlayScene extends Scene {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────
-    //  INNER CLASS: Game event handler
-    // ──────────────────────────────────────────────────────────────────
-
-    /**
-     * Named inner class that handles collision-triggered game events.
-     * Accesses PlayScene fields directly for scene-level side effects
-     * (sounds, FX, game state transitions).
-     */
     private class PlaySceneEventHandler implements GameEventListener {
 
         @Override public void onPadLanding() {
@@ -461,3 +420,4 @@ public class PlayScene extends Scene {
         }
     }
 }
+

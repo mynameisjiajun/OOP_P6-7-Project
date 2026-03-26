@@ -8,13 +8,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.Project.engine.core.GameMaster;
 
-/**
- * Shown when the player clears enough debris to win.
- * Displays the final score and station health, then offers
- * Play Again or Main Menu.
- */
+//win screen shown when player clears enough debris 
 public class WinScene extends StarBackgroundScene {
-
+	//background + UI colours
     private static final Color BG    = new Color(0.02f, 0.05f, 0.02f, 1f);
     private static final Color UP    = new Color(0.05f, 0.20f, 0.08f, 1f);
     private static final Color OVER  = new Color(0.20f, 0.70f, 0.25f, 1f);
@@ -32,6 +28,8 @@ public class WinScene extends StarBackgroundScene {
 
     @Override
     public void show() {
+    	// stop gameplay sounds and start win screen music
+        gameMaster.getAudioManager().stopRocketLoop();
         gameMaster.getAudioManager().startDefaultBackgroundMusic();
         super.show();
     }
@@ -39,7 +37,8 @@ public class WinScene extends StarBackgroundScene {
     @Override
     protected void buildUI() {
         addLabelStyle("info", Color.LIGHT_GRAY);
-
+        
+        // title and summary
         Label titleLabel = new Label("MISSION COMPLETE", skin, "title");
         titleLabel.setFontScale(2.5f);
 
@@ -49,7 +48,8 @@ public class WinScene extends StarBackgroundScene {
         Label factLabel1 = new Label("In reality: 27,000+ pieces of tracked debris orbit Earth", skin, "info");
         Label factLabel2 = new Label("3,000+ dead satellites still remain in orbit today", skin, "info");
         Label factLabel3 = new Label("It costs millions per year just to track - not remove - this debris", skin, "info");
-
+        
+        // buttons
         TextButton playAgainButton = new TextButton("PLAY AGAIN", skin);
         TextButton menuButton      = new TextButton("MAIN MENU",  skin);
 
@@ -65,7 +65,7 @@ public class WinScene extends StarBackgroundScene {
                 gameMaster.getSceneManager().setState(new MainMenuScene(gameMaster));
             }
         });
-
+        // layout table
         Table table = new Table();
         table.setFillParent(true);
         table.center();

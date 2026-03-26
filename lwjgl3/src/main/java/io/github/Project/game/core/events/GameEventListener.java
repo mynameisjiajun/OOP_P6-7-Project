@@ -5,57 +5,30 @@ import io.github.Project.game.entities.Satellite;
 
 import java.util.List;
 
-/**
- * Callback interface for game-level side effects triggered by collisions.
- * Implemented by PlayScene's inner PlaySceneEventHandler and consumed
- * by each collision strategy's static {@code create()} factory method.
- */
+// handles game-related events triggered by collisions
 public interface GameEventListener {
 
-    /** Called when the rocket lands successfully on the landing pad. */
+    // rocket lands successfully
     default void onPadLanding() {}
 
-    /**
-     * Called when the rocket crashes into the ground at unsafe speed or angle.
-     *
-     * @param speed impact speed in world units per second
-     * @param angle rocket's angle at impact, in degrees
-     */
+    // rocket crashes on landing
     default void onCrashLanding(float speed, float angle) {}
 
-    /**
-     * Called each time the space station takes damage from a debris hit.
-     *
-     * @param dmg amount of damage dealt this hit
-     * @param pct station health remaining as a fraction (0.0 – 1.0)
-     */
+    // space station takes damage
     default void onStationDamaged(float dmg, float pct) {}
 
-    /** Called when the space station's health reaches zero. */
+    // space station destroyed (game over)
     default void onStationDestroyed() {}
 
-    /**
-     * Called to trigger a visual hit effect at the point of debris impact.
-     *
-     * @param x world X coordinate of the impact
-     * @param y world Y coordinate of the impact
-     */
+    // trigger debris impact visual effect
     default void onDebrisHitFx(float x, float y) {}
 
-    /**
-     * Called when a satellite is destroyed (e.g. hit by debris or rocket).
-     *
-     * @param sat the destroyed satellite instance
-     */
+    // satellite destroyed
     default void onSatelliteDestroyed(Satellite sat) {}
 
-    /**
-     * Called after a satellite explodes and scatters secondary debris.
-     *
-     * @param debris list of newly spawned debris fragments
-     */
+    // debris spawned from satellite destruction
     default void onSatelliteDebrisSpawned(List<Debris> debris) {}
 
-    /** Called to play a generic collision sound effect. */
+    // play collision sound
     default void onCollisionSound() {}
 }

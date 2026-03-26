@@ -8,12 +8,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.Project.engine.core.GameMaster;
 
-/**
- * Shown when the space station is destroyed.
- * Displays the reason and final score, then offers Try Again or Main Menu.
- */
+// game over screen shown when player loses
 public class GameOverScene extends StarBackgroundScene {
 
+    // background + UI colors
     private static final Color BG    = new Color(0.05f, 0.01f, 0.01f, 1f);
     private static final Color UP    = new Color(0.22f, 0.06f, 0.06f, 1f);
     private static final Color OVER  = new Color(0.80f, 0.20f, 0.10f, 1f);
@@ -21,7 +19,7 @@ public class GameOverScene extends StarBackgroundScene {
     private static final Color TITLE = new Color(1.00f, 0.25f, 0.15f, 1f);
     private static final Color STARS = new Color(0.80f, 0.20f, 0.10f, 1f);
 
-    private final int    score;
+    private final int score;
     private final String reason;
 
     public GameOverScene(GameMaster gameMaster, int score, String reason) {
@@ -32,19 +30,31 @@ public class GameOverScene extends StarBackgroundScene {
 
     @Override
     public void show() {
-        gameMaster.getAudioManager().startDefaultBackgroundMusic();
+        // stop gameplay sounds
+        gameMaster.getAudioManager().stopRocketLoop();
+
         super.show();
+
+        // play game over sound
+        gameMaster.getIoManager().playGameOverSound();
+
+        // start background music for this scene
+        gameMaster.getAudioManager().startDefaultBackgroundMusic();
     }
 
     @Override
     protected void buildUI() {
+
+        // style for additional info text
         addLabelStyle("info", new Color(0.85f, 0.55f, 0.55f, 1f));
 
         Label titleLabel  = new Label("MISSION FAILED", skin, "title");
         titleLabel.setFontScale(2.5f);
+
         Label reasonLabel = new Label(reason, skin, "info");
         Label scoreLabel  = new Label("Debris cleared: " + score, skin);
 
+        // buttons
         TextButton tryAgainButton = new TextButton("TRY AGAIN", skin);
         TextButton menuButton     = new TextButton("MAIN MENU", skin);
 
@@ -54,6 +64,7 @@ public class GameOverScene extends StarBackgroundScene {
                 gameMaster.getSceneManager().setState(new PlayScene(gameMaster));
             }
         });
+
         menuButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 gameMaster.getAudioManager().playUIClick();
@@ -61,9 +72,11 @@ public class GameOverScene extends StarBackgroundScene {
             }
         });
 
+        // layout table
         Table table = new Table();
         table.setFillParent(true);
         table.center();
+
         table.add(titleLabel).padBottom(12).row();
         table.add(reasonLabel).padBottom(32).row();
         table.add(scoreLabel).padBottom(48).row();

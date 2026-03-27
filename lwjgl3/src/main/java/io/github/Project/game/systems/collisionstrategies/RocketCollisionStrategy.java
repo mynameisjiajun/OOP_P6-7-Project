@@ -18,7 +18,7 @@ import io.github.Project.game.core.events.GameEventListener;
  */
 public class RocketCollisionStrategy implements ICollisionStrategy {
 
-    // ── Landing guide display thresholds (no longer used for crash logic) ──
+    // Landing guide display thresholds (no longer used for crash logic)
     public static final float MAX_SAFE_LANDING_SPEED = 160f;
     public static final float MIN_UPRIGHT_ANGLE      = 65f;
     public static final float MAX_UPRIGHT_ANGLE      = 115f;
@@ -28,7 +28,7 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
     private static final String TAG_SATELLITE        = "Satellite";
     private static final String TAG_DEBRIS           = "Debris";
 
-    // ── Grace period (prevents immediate ground collision on takeoff) ─────
+    // Grace period (prevents immediate ground collision on takeoff)
     private static final float TAKEOFF_GRACE_PERIOD  = 4.0f;
     private static final float SAFE_TAKEOFF_ALTITUDE = 200f;
 
@@ -78,14 +78,14 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
         }
     }
 
-    // ── Ground: always crash (not the safe pad) ──────────────────────────
+    // Ground: always crash (not the safe pad)
 
     private void handleGroundLanding() {
         if (landingCallback != null)
             landingCallback.onCrashLanding(Math.abs(rocket.getVy()), rocket.getRotation());
     }
 
-    // ── EarthStation pad: always safe — no crash possible ────────────────
+    // EarthStation pad: always safe — no crash possible
 
     private void handlePadLanding() {
         if (landingCallback != null) landingCallback.onPadLanding();
@@ -100,7 +100,7 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
             && angle <= MAX_UPRIGHT_ANGLE;
     }
 
-    // ── Callback setters ─────────────────────────────────────────────────
+    // Callback setters
 
     public void setLandingCallback(LandingCallback cb) { this.landingCallback = cb; }
 
@@ -112,7 +112,7 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
         hasLiftedOff     = false;
     }
 
-    // ── Callback interfaces ──────────────────────────────────────────────
+    // Callback interfaces
 
     public interface LandingCallback {
         void onPadLanding();
@@ -124,7 +124,7 @@ public class RocketCollisionStrategy implements ICollisionStrategy {
         void onCaught(Debris d);
     }
 
-    // ── Static factory ───────────────────────────────────────────────────
+    // Static factory
 
     /**
      * Creates a fully-wired RocketCollisionStrategy and assigns it to the rocket.

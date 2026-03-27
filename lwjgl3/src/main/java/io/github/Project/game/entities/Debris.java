@@ -59,27 +59,27 @@ public class Debris extends CollidableEntity {
         public float getStationDamageMultiplier() { return stationDamageMultiplier; }
     }
 
-    // ── Hot threshold range — randomised per instance so debris goes hot at staggered times ──
+    // Hot threshold range — randomised per instance so debris goes hot at staggered times
     private static final float HOT_THRESHOLD_MIN = 35f;
     private static final float HOT_THRESHOLD_MAX = 55f;
 
-    // ── Kessler mode speed-based heat (units/s) ───────────────────────────
+    // Kessler mode speed-based heat (units/s)
     private static final float HEAT_SPEED_MIN         = 12f;  // below this: cool in Kessler
     private static final float HEAT_SPEED_MAX_KESSLER = 60f;  // fully red at this speed in Kessler
     private boolean            kesslerMode            = false;
 
-    // ── Regular debris texture variants ──────────────────────────────────
+    // Regular debris texture variants
     private static final String[] DEBRIS_TEXTURES = {
         "images/entities/debris/Space Debris 1.png", "images/entities/debris/Space Debris 2.png",
         "images/entities/debris/Space Debris 3.png", "images/entities/debris/Space Debris 4.png",
         "images/entities/debris/Space Debris 5.png", "images/entities/debris/Space Debris 6.png"
     };
 
-    // ── Shared hot texture (loaded once for all instances) ────────────────
+    // Shared hot texture (loaded once for all instances)
     private static Texture sharedHotTexture  = null;
     private static int     hotTextureUsers   = 0;
 
-    // ── Per-instance fields ───────────────────────────────────────────────
+    // Per-instance fields
     private Texture texture;
     private final float width;
     private final float height;
@@ -87,7 +87,7 @@ public class Debris extends CollidableEntity {
     private final float baseRotationSpeed;
     private final DebrisClass debrisClass;
 
-    // ── Heat / motion state ───────────────────────────────────────────────
+    // Heat / motion state
     private DebrisState state           = DebrisState.FLYING;
     private float   aliveTimer      = 0f;
     private final float hotThreshold;   // randomised per instance (HOT_THRESHOLD_MIN..MAX)
@@ -184,7 +184,7 @@ public class Debris extends CollidableEntity {
     @Override public float getWidth()  { return width;  }
     @Override public float getHeight() { return height; }
 
-    // ── State accessors ───────────────────────────────────────────────────
+    // State accessors
 
     /**
      * Sets the lifecycle state of this debris piece.
@@ -214,7 +214,7 @@ public class Debris extends CollidableEntity {
     public int         getClearScore()               { return debrisClass.getClearScore(); }
     public float       getStationDamageMultiplier()  { return debrisClass.getStationDamageMultiplier(); }
 
-    // ── Static hot-texture lifecycle (avoids writing statics from instance) ─
+    // Static hot-texture lifecycle (avoids writing statics from instance)
 
     private static void acquireHotTexture() {
         if (sharedHotTexture == null) {
@@ -232,7 +232,7 @@ public class Debris extends CollidableEntity {
         }
     }
 
-    // ── Cleanup ───────────────────────────────────────────────────────────
+    // Cleanup
 
     public void dispose() {
         if (texture != null) { texture.dispose(); texture = null; }

@@ -25,15 +25,15 @@ import io.github.Project.game.core.factory.DebrisFactory;
  */
 public class WorldRenderer {
 
-    // ── Zone boundaries ─────────────────────────────────────────────────
+    // Zone boundaries
     private static final float EARTH_ZONE_END   = 2500f;
     private static final float SPACE_ZONE_START = 4000f;
     private static final float CLOUD_BAND_MIN   = 900f;
     private static final float CLOUD_BAND_MAX   = 1800f;
 
-    // ── World geometry ───────────────────────────────────────────────────
+    // World geometry
     private static final int   TILE_SIZE        = 256;
-    // ── Agency building display sizes [mission, dish, vab, tanks, tower] ─
+    // Agency building display sizes [mission, dish, vab, tanks, tower]
     private static final float[] AGENCY_W        = { 400f, 100f, 120f, 200f,  60f };
     private static final float[] AGENCY_H        = { 200f, 125f, 240f, 160f, 370f };
     private static final float[] AGENCY_BASE_Y   = { -45f, -45f, -45f, -67f, -45f };
@@ -45,7 +45,7 @@ public class WorldRenderer {
     private static final float   AGENCY_MIN_SPACING      =   45f;
     private static final long    AGENCY_LAYOUT_SEED      = 77777L;
 
-    // ── PCG random number generator constants ────────────────────────────
+    // PCG random number generator constants
     private static final long PCG_MULTIPLIER          = 6364136223846793005L;
     private static final long PCG_INCREMENT           = 1442695040888963407L;
     private static final long CLOUD_INIT_SEED         = 12345L;
@@ -55,10 +55,10 @@ public class WorldRenderer {
     private static final float AGENCY_CANDIDATE_STEP  = 25f;
     private static final float AGENCY_FALLBACK_SPACING = 260f;
 
-    // ── Clouds ───────────────────────────────────────────────────────────
+    // Clouds
     private static final int CLOUD_COUNT = 6;
 
-    // ── Effects ──────────────────────────────────────────────────────────
+    // Effects
     private static final float EXPLOSION_DURATION       = 0.35f;
     private static final float EXPLOSION_SIZE           = 80f;
     private static final float ATMOSPHERE_BURN_DURATION = 0.6f;
@@ -67,15 +67,15 @@ public class WorldRenderer {
     private static final float STATION_HIT_FX_SIZE_MIN  = 28f;
     private static final float STATION_HIT_FX_SIZE_MAX  = 46f;
 
-    // ── Bowl draw size ───────────────────────────────────────────────────
+    // Bowl draw size
     private static final float BOWL_DRAW_W = 68f;
     private static final float BOWL_DRAW_H = 34f;
 
-    // ── Background colours ───────────────────────────────────────────────
+    // Background colours
     private static final Color COLOR_SKY   = new Color(0.40f, 0.70f, 0.95f, 1f);
     private static final Color COLOR_SPACE = new Color(0.02f, 0.02f, 0.08f, 1f);
 
-    // ── StationHitFx inner class ─────────────────────────────────────────
+    // StationHitFx inner class
     private static class StationHitFx {
         float x, y, size, timer;
         StationHitFx(float x, float y, float size) {
@@ -84,7 +84,7 @@ public class WorldRenderer {
         }
     }
 
-    // ── Dependencies ─────────────────────────────────────────────────────
+    // Dependencies
     private final GameMaster    gameMaster;
     private final Rocket        rocket;
     private final SpaceStation  spaceStation;
@@ -92,7 +92,7 @@ public class WorldRenderer {
     private final Array<Satellite> satellites;
     private final DebrisFactory debrisManager;
 
-    // ── Background textures ──────────────────────────────────────────────
+    // Background textures
     private Texture   grassTopTex;
     private Texture   dirtTex;
     private Texture[] agencyTextures;
@@ -101,22 +101,22 @@ public class WorldRenderer {
     private float[]   cloudPositions;
     private float[]   starPositions;
 
-    // ── Effect textures ──────────────────────────────────────────────────
+    // Effect textures
     private Texture explosionTex;
     private Texture atmosphereBurnTex;
     private Texture bowlTex;
 
-    // ── Effect state ─────────────────────────────────────────────────────
+    // Effect state
     private float explosionTimer;
     private float explosionX, explosionY;
     private float atmosphereBurnTimer;
     private float atmosphereBurnX, atmosphereBurnY;
     private final Array<StationHitFx> stationHitFxList = new Array<>();
 
-    // ── Reusable colour ──────────────────────────────────────────────────
+    // Reusable colour
     private final Color tempColor = new Color();
 
-    // ── Constructor ──────────────────────────────────────────────────────
+    // Constructor
 
     public WorldRenderer(GameMaster gameMaster, Rocket rocket,
                          SpaceStation spaceStation, EarthStation earthStation,
@@ -129,7 +129,7 @@ public class WorldRenderer {
         this.debrisManager = debrisManager;
     }
 
-    // ── Init ─────────────────────────────────────────────────────────────
+    // Init
 
     public void init() {
         // Ground textures
@@ -203,7 +203,7 @@ public class WorldRenderer {
         bowlTex           = new Texture(Gdx.files.internal("images/effects/Bowl.png"));
     }
 
-    // ── Update ───────────────────────────────────────────────────────────
+    // Update
 
     public void update(float delta) {
         // Tick station-hit spark timers
@@ -216,7 +216,7 @@ public class WorldRenderer {
         if (atmosphereBurnTimer > 0f) atmosphereBurnTimer -= delta;
     }
 
-    // ── Effect triggers ──────────────────────────────────────────────────
+    // Effect triggers
 
     public void triggerExplosion(float x, float y) {
         explosionX     = x;
@@ -238,7 +238,7 @@ public class WorldRenderer {
         spaceStation.triggerShake(0.35f, 14f);
     }
 
-    // ── Draw ─────────────────────────────────────────────────────────────
+    // Draw
 
     /**
      * Main render entry point. Delegates each visual layer to a focused
@@ -269,7 +269,7 @@ public class WorldRenderer {
         drawSatelliteHealthBars(gameCamera);
     }
 
-    // ── Private draw helpers ──────────────────────────────────────────────
+    // Private draw helpers
 
     /**
      * Positions the camera to follow the rocket centre, applying shake
@@ -430,7 +430,7 @@ public class WorldRenderer {
         return Color.RED;
     }
 
-    // ── Dispose ──────────────────────────────────────────────────────────
+    // Dispose
 
     public void dispose() {
         if (grassTopTex       != null) { grassTopTex.dispose();       grassTopTex       = null; }
@@ -448,7 +448,7 @@ public class WorldRenderer {
         }
     }
 
-    // ── Private helpers ──────────────────────────────────────────────────
+    // Private helpers
 
     private void drawBackground(SpriteBatch batch, float camX, float camY,
                                 float halfW, float halfH) {

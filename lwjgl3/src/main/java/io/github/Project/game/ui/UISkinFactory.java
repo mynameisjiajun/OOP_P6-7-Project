@@ -8,29 +8,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
-/**
- * PATTERN: Abstract Factory (applied as a static Factory)
- *
- * All three UI scenes — MainMenuScene, PauseScene, and OptionsScene — had an
- * identical private createSkin() method (~20 lines each), duplicated verbatim.
- * This factory centralises that logic so:
- *   - A single change here is reflected in every scene automatically.
- *   - Scenes no longer need to import Pixmap / BitmapFont / TextButton.TextButtonStyle.
- *   - The slider variant used only by OptionsScene is kept as a separate method,
- *     so OptionsScene composes the two skins: base + withSlider().
- *
- * The "Abstract Factory" framing here is that this class defines a family of
- * related UI products (base skin, slider extension, label styles) produced
- * together — the scene picks the product family it needs.
- *
- * Usage:
- *   // MainMenuScene / PauseScene:
- *   Skin skin = UISkinFactory.createSpaceSkin(BTN_UP, BTN_OVER, BTN_DOWN);
- *
- *   // OptionsScene (needs slider controls in addition):
- *   Skin skin = UISkinFactory.createSpaceSkin(BTN_UP, BTN_OVER, BTN_DOWN);
- *   UISkinFactory.addSliderStyle(skin, ACCENT_COLOR);
- */
+// PATTERN: Static Factory
+// Builds the shared space-themed Skin used by all UI scenes.
+// OptionsScene also calls addSliderStyle() on top of the base skin.
 public class UISkinFactory {
 
     private UISkinFactory() {
@@ -49,19 +29,19 @@ public class UISkinFactory {
     public static Skin createSpaceSkin(Color btnUp, Color btnOver, Color btnDown) {
         Skin skin = new Skin();
 
-        // ── Font ────────────────────────────────────────────────────────────
+        // Font
         BitmapFont font = new BitmapFont();
         font.getData().setScale(1.1f);
         skin.add("default", font);
 
-        // ── 1×1 white Pixmap (used as coloured drawable source) ─────────────
+        // 1×1 white Pixmap (used as coloured drawable source)
         Pixmap px = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         px.setColor(Color.WHITE);
         px.fill();
         skin.add("white", new Texture(px));
         px.dispose(); // Safe to dispose after Texture takes ownership
 
-        // ── Button style ─────────────────────────────────────────────────────
+        // Button style
         TextButton.TextButtonStyle btn = new TextButton.TextButtonStyle();
         btn.up        = skin.newDrawable("white", btnUp);
         btn.over      = skin.newDrawable("white", btnOver);
@@ -81,28 +61,28 @@ public class UISkinFactory {
      * @param accentColor the fill colour for the portion of the track before the knob
      */
     public static void addSliderStyle(Skin skin, Color accentColor) {
-        // ── Knob ─────────────────────────────────────────────────────────────
+        // Knob
         Pixmap knobPix = new Pixmap(20, 20, Pixmap.Format.RGBA8888);
         knobPix.setColor(Color.WHITE);
         knobPix.fill();
         skin.add("knob", new Texture(knobPix));
         knobPix.dispose();
 
-        // ── Track background ─────────────────────────────────────────────────
+        // Track background
         Pixmap trackPix = new Pixmap(1, 10, Pixmap.Format.RGBA8888);
         trackPix.setColor(new Color(0.15f, 0.15f, 0.25f, 1f));
         trackPix.fill();
         skin.add("track", new Texture(trackPix));
         trackPix.dispose();
 
-        // ── Track fill (accent colour, left of knob) ─────────────────────────
+        // Track fill (accent colour, left of knob)
         Pixmap fillPix = new Pixmap(1, 10, Pixmap.Format.RGBA8888);
         fillPix.setColor(accentColor);
         fillPix.fill();
         skin.add("trackFill", new Texture(fillPix));
         fillPix.dispose();
 
-        // ── Assemble SliderStyle ─────────────────────────────────────────────
+        // Assemble SliderStyle
         Slider.SliderStyle sliderStyle = new Slider.SliderStyle();
         sliderStyle.background = skin.newDrawable("track");
         sliderStyle.knob       = skin.newDrawable("knob");

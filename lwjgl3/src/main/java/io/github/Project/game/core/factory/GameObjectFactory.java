@@ -24,7 +24,7 @@ public class GameObjectFactory {
         this.debrisFactory = new DebrisFactory();
     }
 
-    // ── World entity creation ────────────────────────────────────────────
+    // World entity creation
 
     public Rocket createRocket(float x, float y) {
         return entityFactory.createRocket(x, y);
@@ -52,7 +52,7 @@ public class GameObjectFactory {
         return entityFactory.createArrow(source, target);
     }
 
-    // ── Debris creation ──────────────────────────────────────────────────
+    // Debris creation
 
     /** Slow-drifting debris for filling the space zone. */
     public Debris createSpaceDebris(float x, float y) {
@@ -74,7 +74,7 @@ public class GameObjectFactory {
             minStationDist, minSpacing, xMin, xMax, yMin, yMax);
     }
 
-    // ── HUD element creation ─────────────────────────────────────────────
+    // HUD element creation
 
     public HealthBar createHealthBar(float x, float y) {
         return entityFactory.createHealthBar(x, y);
@@ -85,13 +85,13 @@ public class GameObjectFactory {
         return entityFactory.createHealthBar(x, y, width, height);
     }
 
-    // ── Damage calculators ───────────────────────────────────────────────
+    // Damage calculators
 
     public DamageCalculator createDamageCalculator(EntityType entityType) {
         return DamageCalculatorFactory.createForEntity(entityType);
     }
 
-    // ── Access to specialised factories ─────────────────────────────────
+    // Access to specialised factories
 
     public DebrisFactory getDebrisFactory() { return debrisFactory; }
     public EntityFactory getEntityFactory() { return entityFactory; }

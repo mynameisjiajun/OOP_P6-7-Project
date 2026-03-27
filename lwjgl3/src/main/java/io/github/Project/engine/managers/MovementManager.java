@@ -22,16 +22,11 @@ public class MovementManager {
         entityStrategies.remove(entity);
     }
 
-    // Updates all registered entities' movements.
     public void updateMovements(float deltaTime) {
     	for (ObjectMap.Entry<Entity, IMovementStrategy> entry : entityStrategies) {
     	    Entity entity = entry.key;
     	    IMovementStrategy strategy = entry.value;
-            // A. Strategy Phase: Calculate Velocity (Input -> Velocity)
-            // (The Player/Entity determines its own desired velocity)
             strategy.updateVelocity(entity);
-            
-            // B. Apply Phase: Update Position (Velocity -> Position)
             entity.update(deltaTime);
         }
     }

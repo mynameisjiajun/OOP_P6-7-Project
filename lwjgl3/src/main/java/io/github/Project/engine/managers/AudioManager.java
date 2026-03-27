@@ -226,7 +226,6 @@ public class AudioManager implements AudioOutput {
     }
 
     public boolean isGameOverSoundPlaying() {
-        // Placeholder logic: Since there is no game-over sound tracked yet, safely return false.
         return false;
     }
 }

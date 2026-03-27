@@ -8,19 +8,9 @@ import io.github.Project.game.entities.SpaceStation;
 import io.github.Project.game.core.events.GameEventListener;
 import io.github.Project.game.core.factory.EntityType;
 
-/**
- * PATTERN: Strategy
- * 
- * Handles collision responses for SpaceStation entities.
- * 
- * GAME MECHANICS:
- * - Station has HIGHER health than both rocket and satellite (requirement)
- * - Station takes LESS damage per hit than satellites (differential scaling)
- * - When station health reaches 0 → game over (requirement)
- * 
- * The station is the most durable structure in the game, representing
- * the player's ultimate objective: protect the space station from debris.
- */
+// PATTERN: Strategy
+// Handles collision responses for the SpaceStation entity.
+// Station health reaching 0 triggers game over.
 public class SpaceStationCollisionStrategy implements ICollisionStrategy {
     
     private final SpaceStation station;
@@ -90,7 +80,7 @@ public class SpaceStationCollisionStrategy implements ICollisionStrategy {
             eventCallback.onStationDestroyed();
     }
 
-    // ── Callback setters ─────────────────────────────────────────────────────
+    // Callback setters
 
     public void setEventCallback(StationEventCallback callback) {
         this.eventCallback = callback;
@@ -100,7 +90,7 @@ public class SpaceStationCollisionStrategy implements ICollisionStrategy {
         this.debrisHitCallback = callback;
     }
 
-    // ── Callback interfaces ──────────────────────────────────────────────────
+    // Callback interfaces
 
     public interface StationEventCallback {
         void onStationDamaged(float damageAmount, float healthPercentage);
@@ -113,7 +103,7 @@ public class SpaceStationCollisionStrategy implements ICollisionStrategy {
         void onHit(float x, float y);
     }
 
-    // ── Static factory ───────────────────────────────────────────────────
+    // Static factory
 
     /**
      * Creates a fully-wired SpaceStationCollisionStrategy and assigns it to the station.

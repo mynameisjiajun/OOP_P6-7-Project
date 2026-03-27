@@ -8,19 +8,13 @@ import io.github.Project.game.entities.Rocket;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * PATTERN: Specialized Factory + Manager
- *
- * Creates all debris objects AND manages the live debris state:
- * flying/attached lists, hot-debris steering, bowl mechanics,
- * Kessler cascade, and win-condition tracking.
- *
- * Owned by GameObjectFactory; obtained via factory.getDebrisFactory().
- * Call setStationCenter() and setRocket() before spawnInitial().
- */
+// PATTERN: Factory + Manager
+// Creates debris and manages its lifecycle: flying/attached lists, hot-debris steering,
+// bowl mechanics, Kessler cascade, and win-condition tracking.
+// Call setStationCenter() and setRocket() before spawnInitial().
 public class DebrisFactory {
 
-    // ── Creation constants ───────────────────────────────────────────────
+    // Creation constants
     private static final float DEBRIS_SIZE          = 50f;
     private static final float MIN_SPAWN_DISTANCE   = 30f;
     private static final float MAX_SPAWN_DISTANCE   = 120f;
@@ -29,7 +23,7 @@ public class DebrisFactory {
     private static final int   SATELLITE_MIN_DEBRIS = 3;
     private static final int   SATELLITE_MAX_DEBRIS = 6;
 
-    // ── Management constants ─────────────────────────────────────────────
+    // Management constants
     public  static final int   MAX_BOWL_CAPACITY             = 4;
     public  static final int   WIN_CLEAR_SCORE               = 20;
     public  static final float ATMOSPHERE_THRESHOLD          = 1400f;
@@ -56,7 +50,6 @@ public class DebrisFactory {
     private static final float BOWL_RELEASE_FORWARD_OFFSET   = 30f;
     private static final float BOWL_RELEASE_RECAPTURE_DELAY  = 0.8f;
 
-    // ── Callbacks ────────────────────────────────────────────────────────
     @FunctionalInterface public interface EntityCallback { void apply(Debris d); }
     @FunctionalInterface public interface BurnCallback   { void onBurn(float x, float y); }
 
@@ -67,7 +60,7 @@ public class DebrisFactory {
     private Runnable       onWinConditionReached;
     private Runnable       onFirstHotDebris;
 
-    // ── Live state ───────────────────────────────────────────────────────
+    // Live state
     private final Array<Debris> flying   = new Array<>();
     private final Array<Debris> attached = new Array<>();
 
@@ -80,14 +73,11 @@ public class DebrisFactory {
     private float   stationWarningPulse = 0f;
     private boolean hotDebrisNotified   = false;
 
-    // ── Scene references (set before spawnInitial) ───────────────────────
+    // Scene references (set before spawnInitial)
     private float  stationCX;
     private float  stationCY;
     private Rocket rocket;
 
-    // ────────────────────────────────────────────────────────────────────
-    //  SETUP
-    // ────────────────────────────────────────────────────────────────────
 
     public void setStationCenter(float cx, float cy) {
         this.stationCX = cx;
@@ -96,7 +86,7 @@ public class DebrisFactory {
 
     public void setRocket(Rocket rocket) { this.rocket = rocket; }
 
-    // ── Callback setters ─────────────────────────────────────────────────
+    // Callback setters
 
     public void setOnEntityAdded(EntityCallback cb)       { this.onEntityAdded         = cb; }
     public void setOnEntityRemoved(EntityCallback cb)     { this.onEntityRemoved        = cb; }
@@ -105,24 +95,12 @@ public class DebrisFactory {
     public void setOnWinConditionReached(Runnable cb)     { this.onWinConditionReached  = cb; }
     public void setOnFirstHotDebris(Runnable cb)          { this.onFirstHotDebris       = cb; }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  INITIALISE
-    // ────────────────────────────────────────────────────────────────────
 
     public void spawnInitial() {
         for (int i = 0; i < MAX_DEBRIS_COUNT; i++) spawnOne();
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  UPDATE
-    // ────────────────────────────────────────────────────────────────────
 
-    /**
-     * Main update tick. Delegates each concern to a focused private method
-     * to satisfy Single Responsibility and keep cyclomatic complexity low.
-     *
-     * @param delta seconds since last frame
-     */
     public void update(float delta) {
         removeDestroyedDebris();
         updateFlyingDebris(delta);
@@ -132,7 +110,7 @@ public class DebrisFactory {
         updateBowlMechanics();
     }
 
-    // ── Private update helpers ────────────────────────────────────────────
+    // Private update helpers
 
     /** Sweeps the flying list and disposes any debris flagged as destroyed. */
     private void removeDestroyedDebris() {
@@ -289,9 +267,6 @@ public class DebrisFactory {
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  BOWL MECHANICS
-    // ────────────────────────────────────────────────────────────────────
 
     public void attachDebris(Debris d) {
         if (d == null || d.isDestroyed() || d.isAttached()) return;
@@ -329,9 +304,6 @@ public class DebrisFactory {
         attached.clear();
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  CREATION METHODS
-    // ────────────────────────────────────────────────────────────────────
 
     /** Slow-drifting debris for filling the space zone. */
     public Debris createSpaceDebris(float x, float y) {
@@ -379,9 +351,6 @@ public class DebrisFactory {
         return debris;
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  ACCESSORS
-    // ────────────────────────────────────────────────────────────────────
 
     public Array<Debris> getFlying()              { return flying; }
     public Array<Debris> getAttached()            { return attached; }
@@ -391,9 +360,6 @@ public class DebrisFactory {
     public boolean isStationWarningActive()       { return stationWarning; }
     public float   getStationWarningPulse()       { return stationWarningPulse; }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  CLEANUP
-    // ────────────────────────────────────────────────────────────────────
 
     public void dispose() {
         for (int i = 0; i < flying.size;   i++) flying.get(i).dispose();
@@ -402,9 +368,6 @@ public class DebrisFactory {
         attached.clear();
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    //  PRIVATE HELPERS
-    // ────────────────────────────────────────────────────────────────────
 
     private void spawnOne() {
         float minDistSq = DEBRIS_MIN_STATION_SPAWN_DIST * DEBRIS_MIN_STATION_SPAWN_DIST;

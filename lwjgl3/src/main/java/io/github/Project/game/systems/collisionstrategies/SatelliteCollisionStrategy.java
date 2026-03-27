@@ -10,17 +10,9 @@ import io.github.Project.game.core.factory.DebrisFactory;
 import io.github.Project.game.core.factory.EntityType;
 import java.util.List;
 
-/**
- * PATTERN: Strategy
- * 
- * Handles collision responses for Satellite entities.
- * 
- * KEY MECHANIC: When satellite health reaches 0, it spawns additional debris.
- * This implements the educational goal: "Satellite destruction → spawns more debris"
- * demonstrating the cascading problem of space debris.
- * 
- * DAMAGE SCALING: Satellites take MORE damage than space station (requirement).
- */
+// PATTERN: Strategy
+// Handles collision responses for Satellite entities.
+// Destroyed satellites spawn a debris cloud, which feeds the Kessler cascade.
 public class SatelliteCollisionStrategy implements ICollisionStrategy {
 
     private static final float SHAKE_DURATION  = 0.25f;
@@ -85,13 +77,6 @@ public class SatelliteCollisionStrategy implements ICollisionStrategy {
         }
     }
 
-    /**
-     * Spawns debris cloud when satellite is destroyed.
-     *
-     * EDUCATIONAL MECHANIC: Each destroyed satellite creates 3-5 new debris pieces,
-     * demonstrating how the space debris problem compounds itself.
-     * This is a key educational point about the Kessler Syndrome.
-     */
     private void spawnDebrisCloud() {
         float centerX = satellite.getPosX() + satellite.getWidth() / 2f;
         float centerY = satellite.getPosY() + satellite.getHeight() / 2f;
@@ -106,7 +91,7 @@ public class SatelliteCollisionStrategy implements ICollisionStrategy {
         }
     }
 
-    // ── Callback setters ─────────────────────────────────────────────────────
+    // Callback setters
 
     public void setDebrisSpawnCallback(DebrisSpawnCallback callback) {
         this.debrisSpawnCallback = callback;
@@ -120,7 +105,7 @@ public class SatelliteCollisionStrategy implements ICollisionStrategy {
         this.onHitSound = callback;
     }
 
-    // ── Callback interfaces ──────────────────────────────────────────────────
+    // Callback interfaces
 
     public interface DebrisSpawnCallback {
         void onDebrisSpawned(List<Debris> debris);
@@ -130,7 +115,7 @@ public class SatelliteCollisionStrategy implements ICollisionStrategy {
         void onDestroyed();
     }
 
-    // ── Static factory ───────────────────────────────────────────────────
+    // Static factory
 
     /**
      * Creates a fully-wired SatelliteCollisionStrategy and assigns it to the satellite.

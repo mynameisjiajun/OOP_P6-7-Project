@@ -22,7 +22,7 @@ import io.github.Project.game.core.factory.DebrisFactory;
  */
 public class HUDRenderer {
 
-    // ── Notification constants ───────────────────────────────────────────
+    // Notification constants
     private static final float NOTIF_DURATION = 5.5f;
     private static final float NOTIF_FADE_IN  = NOTIF_DURATION * 0.12f;
     private static final float NOTIF_FADE_OUT = NOTIF_DURATION * 0.20f;
@@ -36,7 +36,7 @@ public class HUDRenderer {
     private final GlyphLayout glyphLayout;
     private final HealthBar   stationHealthBar;
 
-    // ── Notification state ───────────────────────────────────────────────
+    // Notification state
     private String notifText  = null;
     private float  notifTimer = 0f;
 
@@ -59,7 +59,7 @@ public class HUDRenderer {
         this.stationHealthBar = stationHealthBar;
     }
 
-    // ── Layout constants ─────────────────────────────────────────────────
+    // Layout constants
     private static final float PANEL_WIDTH          = 230f;
     private static final float PANEL_HEIGHT         = 135f;
     private static final float HEALTH_BAR_WIDTH     = 300f;
@@ -69,10 +69,6 @@ public class HUDRenderer {
     private static final float LANDING_ALT_THRESHOLD = 500f;
     private static final float REPAIR_FADE_DIVISOR  = 0.75f; // 2.5f * 0.3f
 
-    /**
-     * Main HUD draw entry point. Delegates each visual concern to a focused
-     * private method to keep cyclomatic complexity low.
-     */
     public void draw(OrthographicCamera hudCamera,
                      float repairCooldownTimer,
                      float repairMessageTimer,
@@ -112,7 +108,7 @@ public class HUDRenderer {
         batch.end();
     }
 
-    // ── Private draw helpers ─────────────────────────────────────────────
+    // Private draw helpers
 
     /** Draws the semi-transparent background behind the top-left stats block. */
     private void drawStatsPanelBackground(ShapeRenderer sr, float vH) {

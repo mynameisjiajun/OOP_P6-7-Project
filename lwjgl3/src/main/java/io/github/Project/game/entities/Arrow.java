@@ -7,13 +7,11 @@ import com.badlogic.gdx.math.MathUtils;
 import io.github.Project.engine.entities.Entity;
 
 /**
- * Directional arrow that points from a source entity toward a target entity.
+ * Directional arrow pointing from a source entity toward a target entity.
  * Rendered as a two-line arrowhead above the source.
  *
- * CHANGE: Removed shapeRenderer.begin() / shapeRenderer.end() from render().
- * PlayScene opens ShapeRenderer in Line mode before calling arrow.render()
- * and closes it afterwards. Calling begin() inside the entity when the
- * renderer is already open throws an IllegalStateException in LibGDX.
+ * render() does not call shapeRenderer.begin()/end() — PlayScene opens and
+ * closes the ShapeRenderer around the call to avoid an IllegalStateException.
  */
 public class Arrow extends Entity {
 

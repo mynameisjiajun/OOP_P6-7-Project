@@ -20,7 +20,7 @@ import io.github.Project.game.entities.HealthBar;
  */
 public class EntityFactory {
 
-    // ── Default sizing constants ─────────────────────────────────────────
+    // Default sizing constants
     private static final float ROCKET_WIDTH          = 48f;
     private static final float ROCKET_HEIGHT         = 96f;
     private static final float DEBRIS_SIZE           = 50f;
@@ -40,7 +40,7 @@ public class EntityFactory {
         this.inputMovement = inputMovement;
     }
 
-    // ── World entities ───────────────────────────────────────────────────
+    // World entities
 
     /** Player rocket at (x, y) — physics handled by RocketMovementStrategy. */
     public Rocket createRocket(float x, float y) {
@@ -78,7 +78,7 @@ public class EntityFactory {
         return new Arrow(source, target);
     }
 
-    // ── HUD elements ─────────────────────────────────────────────────────
+    // HUD elements
 
     /** Standard-sized health bar anchored at (x, y). */
     public HealthBar createHealthBar(float x, float y) {
@@ -90,7 +90,7 @@ public class EntityFactory {
         return new HealthBar(x, y, width, height);
     }
 
-    // ── Satellite spawning ───────────────────────────────────────────────
+    // Satellite spawning
 
     /**
      * Creates a satellite at a random valid position within the given zone,

@@ -32,17 +32,7 @@ public class RocketMovementStrategy implements IMovementStrategy {
     private Ground groundSentinel;
 
     /**
-     * Updates the rocket's velocity and position each frame, simulating:
-     * <ul>
-     *   <li>Player-controlled rotation (left/right keys)</li>
-     *   <li>Thrust along the rocket's current heading (up key)</li>
-     *   <li>Earth gravity that fades to zero above {@code SPACE_THRESHOLD}</li>
-     *   <li>Atmospheric drag that transitions to near-zero space drag above threshold</li>
-     *   <li>Ground collision — clamps position, zeroes downward velocity, applies landing friction,
-     *       and fires the collision strategy once per landing</li>
-     * </ul>
-     *
-     * @param entity the {@link Rocket} entity to update; must be castable to {@code Rocket}
+     * Updates rocket velocity each frame: rotation input, thrust, gravity, drag, and ground collision.
      */
     @Override
     public void updateVelocity(Entity entity) {
@@ -50,11 +40,11 @@ public class RocketMovementStrategy implements IMovementStrategy {
         InputMovement input = rocket.getInput();
         float dt = Gdx.graphics.getDeltaTime();
 
-        // ── Rotation ─────────────────────────────────────────────────────────
+        // Rotation
         if (input.isKeyLeft())  rocket.setRotation(rocket.getRotation() + ROTATION_SPEED * dt);
         if (input.isKeyRight()) rocket.setRotation(rocket.getRotation() - ROTATION_SPEED * dt);
 
-        // ── Earth gravity & atmospheric drag (fade out above SPACE_THRESHOLD) ─
+        // Earth gravity & atmospheric drag (fade out above SPACE_THRESHOLD)
         float gravity  = 0f;
         float drag     = SPACE_DRAG;
         if (rocket.getPosY() < SPACE_THRESHOLD) {
@@ -64,17 +54,17 @@ public class RocketMovementStrategy implements IMovementStrategy {
         }
         rocket.setVy(rocket.getVy() - gravity * dt);
 
-        // ── Drag ─────────────────────────────────────────────────────────────
+        // Drag
         rocket.setVx(rocket.getVx() * drag);
         rocket.setVy(rocket.getVy() * drag);
 
-        // ── Thrust ───────────────────────────────────────────────────────────
+        // Thrust
         if (input.isKeyUp()) {
             rocket.setVx(rocket.getVx() + MathUtils.cosDeg(rocket.getRotation()) * THRUST_POWER * dt);
             rocket.setVy(rocket.getVy() + MathUtils.sinDeg(rocket.getRotation()) * THRUST_POWER * dt);
         }
 
-        // ── Ground collision detection ─────────────────────────────────────
+        // Ground collision detection
         handleGroundCollision(rocket);
     }
 

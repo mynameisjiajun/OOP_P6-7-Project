@@ -105,7 +105,7 @@ public class Rocket extends CollidableEntity {
         }
     }
 
-    //  Getters/Setters
+    // Getters/Setters
 
     @Override public float getWidth()  { return width; }
     @Override public float getHeight() { return height; }
